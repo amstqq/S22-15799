@@ -36,7 +36,7 @@ def task_project1():
     def example_function(workload_csv, timeout):
         print(f"dodo received workload CSV: {workload_csv}")
         print(f"dodo received timeout: {timeout}")
-        ids = P1IndexSelection()
+        ids = P1IndexSelection("epinions_workload.csv")
         ids.run()
 
     return {
