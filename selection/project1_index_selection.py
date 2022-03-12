@@ -156,6 +156,7 @@ class P1IndexSelection:
         with open(self.config_file) as f:
             config = json.load(f)
         self.setup_db_connector()
+        self.db_connector.enable_simulation()
         # TODO: DROP INDEX
         self.db_connector.drop_indexes()
 
