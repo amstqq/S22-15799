@@ -28,6 +28,10 @@
 from selection.project1_index_selection import P1IndexSelection
 
 
+def project1_setup():
+    pass
+
+
 def task_project1():
     """
     Generate actions.
@@ -42,7 +46,7 @@ def task_project1():
         print(f"dodo received workload CSV: {workload_csv}")
         print(f"dodo received timeout: {timeout}")
         ids = P1IndexSelection(workload_csv, None,
-                               disable_output_files=False)
+                               disable_output_files=True)
         ids.run()
 
     return {
