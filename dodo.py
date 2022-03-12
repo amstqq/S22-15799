@@ -38,17 +38,17 @@ def task_project1():
     # CREATE EXTENSION hypopg;
     # Install dexter
 
-    def example_function(workload_csv, timeout):
+    def run_index_selector(workload_csv, timeout):
         print(f"dodo received workload CSV: {workload_csv}")
         print(f"dodo received timeout: {timeout}")
-        ids = P1IndexSelection("epinions.csv", None,
+        ids = P1IndexSelection(workload_csv, None,
                                disable_output_files=False)
         ids.run()
 
     return {
         "actions": [
             'echo "Faking action generation."',
-            example_function,
+            run_index_selector,
             # 'echo "SELECT 1;" > actions.sql',
             # 'echo "SELECT 2;" >> actions.sql',
             # 'echo \'{"VACUUM": true}\' > config.json',
