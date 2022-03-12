@@ -2,6 +2,8 @@ import logging
 
 from .what_if_index_creation import WhatIfIndexCreation
 
+from .workload import Query
+
 
 class CostEvaluation:
     def __init__(self, db_connector, cost_estimation="whatif"):
@@ -33,7 +35,8 @@ class CostEvaluation:
         if result:
             # Index does currently exist and size can be queried
             if not index.estimated_size:
-                index.estimated_size = self.what_if.estimate_index_size(result.hypopg_oid)
+                index.estimated_size = self.what_if.estimate_index_size(
+                    result.hypopg_oid)
         else:
             self._simulate_or_create_index(index, store_size=True)
 
@@ -116,7 +119,7 @@ class CostEvaluation:
 
         assert self.current_indexes == set()
 
-    def _request_cache(self, query, indexes):
+    def _request_cache(self, query: Query, indexes):
         q_i_hash = (query, frozenset(indexes))
         if q_i_hash in self.relevant_indexes_cache:
             relevant_indexes = self.relevant_indexes_cache[q_i_hash]

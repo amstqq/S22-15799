@@ -33,10 +33,16 @@ def task_project1():
     Generate actions.
     """
 
+    # TODO: Install HypoPg
+    # sudo apt-get install postgresql-14-hypopg
+    # CREATE EXTENSION hypopg;
+    # Install dexter
+
     def example_function(workload_csv, timeout):
         print(f"dodo received workload CSV: {workload_csv}")
         print(f"dodo received timeout: {timeout}")
-        ids = P1IndexSelection("epinions_workload.csv")
+        ids = P1IndexSelection("epinions.csv", None,
+                               disable_output_files=False)
         ids.run()
 
     return {

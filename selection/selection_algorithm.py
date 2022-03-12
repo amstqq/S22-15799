@@ -24,7 +24,7 @@ class SelectionAlgorithm:
                 self.parameters[key] = value
 
         self.database_connector = database_connector
-        self.database_connector.drop_indexes()
+        # self.database_connector.drop_indexes()
         self.cost_evaluation = CostEvaluation(database_connector)
         if "cost_estimation" in self.parameters:
             estimation = self.parameters["cost_estimation"]
@@ -40,7 +40,8 @@ class SelectionAlgorithm:
         return indexes
 
     def _calculate_best_indexes(self, workload):
-        raise NotImplementedError("_calculate_best_indexes(self, " "workload) missing")
+        raise NotImplementedError(
+            "_calculate_best_indexes(self, " "workload) missing")
 
     def _log_cache_hits(self):
         hits = self.cost_evaluation.cache_hits

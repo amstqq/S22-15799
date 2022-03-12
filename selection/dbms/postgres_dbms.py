@@ -184,7 +184,8 @@ class PostgresDatabaseConnector(DatabaseConnector):
     def _get_plan(self, query):
         query_text = self._prepare_query(query)
         statement = f"explain (format json) {query_text}"
-        query_plan = self.exec_fetch(statement)[0][0]["Plan"]
+        f = self.exec_fetch(statement)
+        query_plan = f[0][0]["Plan"]
         self._cleanup_query(query)
         return query_plan
 

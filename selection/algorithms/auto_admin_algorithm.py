@@ -34,7 +34,7 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
         )
         self.max_index_width = self.parameters["max_index_width"]
 
-    def _calculate_best_indexes(self, workload):
+    def _calculate_best_indexes(self, workload: Workload):
         logging.info("Calculating best indexes AutoAdmin")
         logging.info("Parameters: " + str(self.parameters))
 
@@ -44,7 +44,8 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
         # Set potential indexes for first iteration
         potential_indexes = workload.potential_indexes()
         for current_max_index_width in range(1, self.max_index_width + 1):
-            candidates = self.select_index_candidates(workload, potential_indexes)
+            candidates = self.select_index_candidates(
+                workload, potential_indexes)
             indexes = self.enumerate_combinations(workload, candidates)
             assert indexes <= candidates, "Indexes must be a subset of candidate indexes"
 
@@ -62,7 +63,8 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
             logging.debug(f"Find candidates for query\t{query}...")
             # Create a workload consisting of one query
             query_workload = Workload([query])
-            indexes = self._potential_indexes_for_query(query, potential_indexes)
+            indexes = self._potential_indexes_for_query(
+                query, potential_indexes)
             candidates |= self.enumerate_combinations(query_workload, indexes)
 
         logging.info(
@@ -86,7 +88,8 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
         )
         logging.debug(log_out)
 
-        number_indexes_naive = min(self.max_indexes_naive, len(candidate_indexes))
+        number_indexes_naive = min(
+            self.max_indexes_naive, len(candidate_indexes))
         current_indexes, costs = self.enumerate_naive(
             workload, candidate_indexes, number_indexes_naive
         )
@@ -123,7 +126,8 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
             for index_combination in itertools.combinations(
                 candidate_indexes, number_of_indexes
             ):
-                cost = self._simulate_and_evaluate_cost(workload, index_combination)
+                cost = self._simulate_and_evaluate_cost(
+                    workload, index_combination)
                 if not lowest_cost or cost < lowest_cost:
                     lowest_cost_indexes = index_combination
                     lowest_cost = cost
@@ -145,7 +149,8 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
         logging.debug(f"Searching in {len(candidate_indexes)} indexes")
 
         for index in candidate_indexes:
-            cost = self._simulate_and_evaluate_cost(workload, current_indexes | {index})
+            cost = self._simulate_and_evaluate_cost(
+                workload, current_indexes | {index})
             if not best_index[0] or cost < best_index[1]:
                 best_index = (index, cost)
         if best_index[0] and best_index[1] < current_costs:
@@ -165,7 +170,8 @@ class AutoAdminAlgorithm(SelectionAlgorithm):
         return current_indexes, current_costs
 
     def _simulate_and_evaluate_cost(self, workload, indexes):
-        cost = self.cost_evaluation.calculate_cost(workload, indexes, store_size=True)
+        cost = self.cost_evaluation.calculate_cost(
+            workload, indexes, store_size=True)
         return round(cost, 2)
 
     def create_multicolumn_indexes(self, workload, indexes):

@@ -38,6 +38,7 @@ class DexterAlgorithm(SelectionAlgorithm):
             # Commit because dexter tool creates another database connection
             command += self.database_connector._prepare_query(query)
             command += '"'
+
             self.database_connector.commit()
             p = subprocess.Popen(
                 command,

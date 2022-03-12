@@ -42,14 +42,15 @@ class DatabaseConnector:
         self.exec_only(statement)
 
     def _prepare_query(self, query):
-        for query_statement in query.text.split(";"):
-            if "create view" in query_statement:
-                try:
-                    self.exec_only(query_statement)
-                except Exception as e:
-                    logging.error(e)
-            elif "select" in query_statement or "SELECT" in query_statement:
-                return query_statement
+        # for query_statement in query.text.split(";"):
+        #     if "create view" in query_statement:
+        #         try:
+        #             self.exec_only(query_statement)
+        #         except Exception as e:
+        #             logging.error(e)
+        #     elif "select" in query_statement or "SELECT" in query_statement:
+        #         return query_statement
+        return query.text[:-1]
 
     def simulate_index(self, index):
         self.simulated_indexes += 1

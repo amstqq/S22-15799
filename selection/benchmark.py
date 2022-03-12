@@ -41,7 +41,7 @@ class Benchmark:
         self.index_simulation_duration = self.db_connector.index_simulation_duration
         self.simulated_indexes = self.db_connector.simulated_indexes
 
-        self.scale_factor = global_config["scale_factor"]
+        self.scale_factor = 1
         self.benchmark_name = global_config["benchmark_name"]
         self.db_system = global_config["database_system"]
         self.seed = None
@@ -51,6 +51,7 @@ class Benchmark:
         self._set_filenames()
 
     def benchmark(self):
+        # TODO: DROP INDEX
         self.db_connector.drop_indexes()
 
         logging.info("Benchmark with config: {}".format(self.config))
@@ -63,58 +64,63 @@ class Benchmark:
             self.index_create_time = 0
             for index in self.indexes:
                 self.what_if.simulate_index(index, store_size=True)
-        self._benchmark()
+        cost, runtime, hit = self._benchmark()
         if self.number_of_runs > 0:
+            # TODO: DROP INDEX
             self._drop_indexes()
         else:
             self.what_if.drop_all_simulated_indexes()
+
+        return cost, runtime, hit
 
     def _create_csv_header(self):
         header = [
             "date",
             "commit",
+            "benchmark name",
             "algorithm name",
             "parameters",
-            "scale factor",
-            "benchmark name",
-            "db system",
+            "sim overall costs",
+            "actual overall_runtime",
+            "actual overall hits",
             "algorithm runtime",
             "algorithm cost time",
             "algorithm index creation time",
             "algorithm created #indexes",
             "#indexes",
-            "index create time",
-            "memory consumption",
+            "actual index create time",
+            "actual/sim index memory consumption",
             "cost requests",
             "cache hits",
         ]
-        for query in self.workload.queries:
-            header.append("q" + str(query.nr))
         header.append("indexed columns")
         return ";".join(header)
 
     def _git_hash(self):
-        githash = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        githash = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"])
         return githash.decode("ascii").replace("\n", "")
 
-    def _store_results(self, results, plans):
+    def _store_results(self, overall_costs, overall_runtime, overall_hits):
         config = self.config
         date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if not self.disable_output_files:
-            self._write_query_plans(date, plans)
         commit_hash = self._git_hash()
         indexes_size = self.db_connector.indexes_size()
+
         # see comment above
         if self.number_of_runs == 0:
-            indexes_size = sum([index.estimated_size for index in self.indexes])
+            indexes_size = sum(
+                [index.estimated_size for index in self.indexes])
+
         csv_entry = [
             date,
             commit_hash,
+            self.benchmark_name,
             config["name"],
             config["parameters"],
-            self.scale_factor,
-            self.benchmark_name,
-            self.db_system,
+            "{0:.2f}".format(overall_costs),
+            "{0:.2f}".format(overall_runtime),
+            "{0:.2f}".format(overall_hits),
             self.calculation_time,
             self.cost_estimation_duration,
             self.index_simulation_duration,
@@ -125,16 +131,11 @@ class Benchmark:
             self.cost_requests,
             self.cache_hits,
         ]
-        csv_entry.extend(results)
         csv_entry.append(sorted(self.indexes))
         self._append_to_csv(";".join([str(x) for x in csv_entry]))
 
         with open(self.picklename, "ba") as file:
             pickle.dump(self.indexes, file)
-
-    def _write_query_plans(self, date, plans):
-        with open(f"benchmark_results/plans/{date}.json", "w") as f:
-            json.dump(plans, f)
 
     def _append_to_csv(self, entry):
         header = self._create_csv_header()
@@ -147,13 +148,14 @@ class Benchmark:
 
     def _benchmark(self):
         logging.info("Benchmark all queries")
-        results = [{"Runtimes": [], "Hits": []} for x in self.workload.queries]
-        plans = {x.nr: [] for x in self.workload.queries}
+        overall_runtime = 0
+        overall_hits = 0
+        overall_costs = 0
 
         for query_id in range(len(self.workload.queries)):
             query = self.workload.queries[query_id]
             cost = self.db_connector.get_cost(query)
-            results[query_id]["Cost"] = cost
+            overall_costs += cost
         for i in range(self.number_of_runs):
             logging.debug("Benchmark Run {}".format(i))
             random_query_indexes = list(range(len(self.workload.queries)))
@@ -167,18 +169,22 @@ class Benchmark:
                 query = self.workload.queries[query_index]
                 logging.debug("Run {}".format(query))
                 execution_time, plan = self._benchmark_query(query)
-                results[query_index]["Runtimes"].append(execution_time)
-                results[query_index]["Hits"].append(self._calculate_hits(plan))
-                plans[query.nr].append(plan)
-        logging.debug("Execution times: {}".format(results))
-        overall_costs = sum(
-            [results[query_id]["Cost"] for query_id in range(len(self.workload.queries))]
-        )
-        logging.debug(f"Overall Costs: {overall_costs}")
-        self._store_results(results, plans)
+                overall_runtime += execution_time
+                overall_hits += self._calculate_hits(plan)
+        overall_runtime = overall_runtime / \
+            self.number_of_runs if self.number_of_runs > 0 else 0
+        overall_hits = overall_hits / \
+            (len(self.workload.queries) *
+             self.number_of_runs) if (len(self.workload.queries) *
+                                      self.number_of_runs) > 0 else 0
+
+        self._store_results(overall_costs, overall_runtime, overall_hits)
+
+        return overall_costs, overall_runtime, overall_hits
 
     def _benchmark_query(self, query):
-        exec_result = self.db_connector.exec_query(query, timeout=self.timeout_ms)
+        exec_result = self.db_connector.exec_query(
+            query, timeout=self.timeout_ms)
         return exec_result
 
     def _calculate_hits(self, plan):
