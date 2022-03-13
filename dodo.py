@@ -1,32 +1,4 @@
-# def task_project1():
-#     return {
-#         # A list of actions. This can be bash or Python callables.
-#         "actions": [
-#             'echo "Faking action generation."',
-#             'echo "SELECT 1;" > actions.sql',
-#             'echo "SELECT 2;" >> actions.sql',
-#             "echo '{\"VACUUM\": true}' > config.json",
-#         ],
-#         # Always rerun this task.
-#         "uptodate": [False],
-#     }
-
-
-# def task_project1():
-#     return {
-#         # A list of actions. This can be bash or Python callables.
-#         "actions": ['echo "Generating sql commands for t1_epinions_1.sql"',
-#                     'echo "CREATE INDEX idx_review_rating ON review(rating);" > t1_epinions_1.sql',
-#                     'echo "CREATE INDEX idx_review_i_id ON review(i_id);" >> t1_epinions_1.sql',
-#                     'echo "CREATE INDEX idx_trust_source_u_id ON trust(source_u_id);" >> t1_epinions_1.sql',
-#                     'echo "CREATE INDEX idx_review_u_id ON review(u_id);" >> t1_epinions_1.sql',
-#                     'echo "CREATE INDEX idx_trust_target_u_id ON trust(target_u_id);" >> t1_epinions_1.sql'],
-#         # Always rerun this task.
-#         "uptodate": [False],
-#     }
-
 from selection.project1_index_selection import P1IndexSelection
-from doit.action import CmdAction
 
 
 def project1_setup():

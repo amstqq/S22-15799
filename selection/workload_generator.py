@@ -312,8 +312,16 @@ class WorkloadGenerator:
         queries_and_params : pd.Series
             A series containing tuples of (prepared SQL query, parameters).
         """
+        simple = r"statement: ((?:DELETE|INSERT|SELECT|UPDATE).*)"
+        extended = r"execute .+: ((?:DELETE|INSERT|SELECT|UPDATE).*)"
+        regex = f"(?:{simple})|(?:{extended})"
 
         def parse(sql):
+            query = re.search(regex, sql)
+            if not query:
+                return np.nan, ()
+            query = query.group(0)
+
             new_sql, params, last_end = [], [], 0
             for token in pglast.parser.scan(sql):
                 token_str = str(sql[token.start: token.end + 1])
@@ -360,25 +368,11 @@ class WorkloadGenerator:
         df = self._read_csv(workload_csv_path, log_columns)
         clock("Read dataframe")
 
-        print("Extract queries: ", end="", flush=True)
-        df["query_raw"] = self._extract_query(df["message"])
-        df.drop(columns=["message"], inplace=True)
-        clock("Extract queries")
-
-        print("Extract parameters: ", end="", flush=True)
-        df["params"] = self._extract_params(df["detail"])
-        df.drop(columns=["detail"], inplace=True)
-        clock("Extract parameters")
-
-        print("Substitute parameters into query: ", end="", flush=True)
-        df["query_subst"] = self._substitute_params(df, "query_raw", "params")
-        df.drop(columns=["query_raw", "params"], inplace=True)
-        clock("Substitute parameters into query")
-
         print("Parse query: ", end="", flush=True)
-        parsed = self._parse(df["query_subst"])
+        parsed = self._parse(df["message"])
         df[["query_template", "query_params"]] = pd.DataFrame(
             parsed.tolist(), index=df.index)
+        df.drop(columns=["message"], inplace=True)
         clock("Parse query")
 
         # Only keep the relevant columns to optimize for storage, unless otherwise specified.
