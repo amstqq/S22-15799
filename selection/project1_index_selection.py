@@ -66,6 +66,10 @@ class P1IndexSelection:
             self.workload_name = "epinions"
         self.workload_name = "epinions"
 
+        # Set up Workload generator which reads workload_csv
+        self.workload_generator = WorkloadGenerator(
+            self.workload_csv_path, sample_size=500)
+
         print(f"Running on benchmark {self.workload_name}...")
 
     def run(self, debug=False):
@@ -84,9 +88,6 @@ class P1IndexSelection:
         self.db_connector.enable_simulation()
         # TODO: REMOVE DROP INDEX, or print existing indexes
         self.db_connector.drop_indexes()
-        # Set up Workload generator which reads workload_csv
-        self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=200)
 
         # Set the random seed to obtain deterministic statistics (and cost estimations)
         # because ANALYZE (and alike) use sampling for large tables
@@ -163,7 +164,7 @@ class P1IndexSelection:
         print(f"Index Selection Finished in {total_runtime} seconds")
 
         self.save_indexes(best_indexes_all_algorithms)
-        # self.print_indexes(best_indexes_all_algorithms)
+        self.print_indexes(best_indexes_all_algorithms)
         self.write_actions_sql_file(
             best_indexes_all_algorithms[0][3], './actions.sql')
 
