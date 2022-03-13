@@ -1,13 +1,13 @@
 {
     "database_system": "postgres",
-    "benchmark_name": "autoadmin_epinions",
-    "number_of_actual_runs": 0,
+    "benchmark_name": "epinions",
+    "number_of_actual_runs": 1,
     "algorithms": [
         {
             "name": "auto_admin",
             "parameters": {
-                "max_indexes": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                "max_indexes_naive": 1,
+                "max_indexes": [4, 6, 8, 10, 12, 14],
+                "max_indexes_naive": 2,
                 "max_index_width": 2
             },
             "timeout": 300
@@ -15,43 +15,43 @@
         {
             "name": "drop",
             "parameters": {
-                "max_indexes": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                "max_indexes": [4, 6, 8, 10, 12, 14]
             },
-            "timeout": 300
+            "timeout": 120
         },
         {
             "name": "extend",
             "parameters": {
-                "budget_MB": [1000, 5000, 10000],
+                "budget_MB": [3000, 5000, 10000, 15000],
                 "max_index_width": 2
             },
-            "timeout": 300
+            "timeout": 120
         },
         {
             "name": "relaxation",
             "parameters": {
-                "budget_MB": [1000, 3000, 5000, 10000],
+                "budget_MB": [3000, 5000, 10000, 15000],
                 "max_index_width": 2
             },
-            "timeout": 300
+            "timeout": 120
         },
         {
             "name": "anytime",
             "parameters": {
                 "max_index_width": 2,
-                "budget_MB":  [1000, 3000, 5000, 10000],
+                "budget_MB":  [3000, 5000, 10000, 15000],
                 "max_runtime_minutes": 30
             },
-            "timeout": 300
+            "timeout": 120
         },
         {
             "name": "db2advis",
             "parameters": {
                 "max_index_width": 2,
-                "budget_MB":  [1000, 3000, 5000, 10000],
+                "budget_MB":  [3000, 5000, 10000, 15000],
                 "try_variations_seconds": 5
             },
-            "timeout": 300
+            "timeout": 120
         }
     ]
 }

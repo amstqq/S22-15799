@@ -148,6 +148,14 @@ class PostgresDatabaseConnector(DatabaseConnector):
             logging.debug("Dropping index {}".format(index_name))
             self.exec_only(drop_stmt)
 
+    def show_curr_indexes(self):
+        stmt = "select indexname from pg_indexes where schemaname='public'"
+        indexes = self.exec_fetch(stmt, one=False)
+        print("============= Current Indexes =============")
+        for index in indexes:
+            index_name = index[0]
+            print(f"{index_name}: {index[1:]}")
+
     # PostgreSQL expects the timeout in milliseconds
     def exec_query(self, query, timeout=None, cost_evaluation=False):
         # Committing to not lose indexes after timeout

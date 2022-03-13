@@ -317,11 +317,10 @@ class WorkloadGenerator:
         regex = f"(?:{simple})|(?:{extended})"
 
         def parse(sql):
-            query = re.search(regex, sql)
-            if not query:
+            sql = re.search(regex, sql, re.IGNORECASE)
+            if not sql:
                 return np.nan, ()
-            query = query.group(0)
-
+            sql = sql.group(1)
             new_sql, params, last_end = [], [], 0
             for token in pglast.parser.scan(sql):
                 token_str = str(sql[token.start: token.end + 1])

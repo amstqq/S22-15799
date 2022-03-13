@@ -68,7 +68,7 @@ class P1IndexSelection:
 
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=500)
+            self.workload_csv_path, sample_size=1000)
 
         print(f"Running on benchmark {self.workload_name}...")
 
@@ -86,6 +86,8 @@ class P1IndexSelection:
         self.setup_db_connector()
         # Enable hypopg
         self.db_connector.enable_simulation()
+        # Show current indexes
+        self.db_connector.show_curr_indexes()
         # TODO: REMOVE DROP INDEX, or print existing indexes
         self.db_connector.drop_indexes()
 
@@ -157,8 +159,19 @@ class P1IndexSelection:
                 f"{algorithm_config['name']} finished in {algo_time} seconds...")
 
         # Store all indexes in sorted order, weight cost by sample runtime
-        # sort_index = 1 if "number_of_actual_runs" in cfg and cfg["number_of_actual_runs"] > 0 else 0
-        best_indexes_all_algorithms.sort(key=lambda x: (x[1]+1) * x[2])
+        # Weighted cost = cost * (1 + runtime/max_runtime)
+        # Runtime = 0 if self.number_of_actual_runs = 0, ie. no sample query is run
+        # Cost is computed by cost estimator. Runtime is obtained from running sample queries.
+        max_runtime = max([x[1] for x in best_indexes_all_algorithms]
+                          )
+        if max_runtime == 0:
+            max_runtime = 1
+        max_cost = max([x[2] for x in best_indexes_all_algorithms])
+        if max_cost == 0:
+            max_cost = 1
+
+        best_indexes_all_algorithms.sort(
+            key=lambda x: x[2]/max_cost+x[1]/max_runtime)
 
         total_runtime = round(time.time() - total_runtime, 2)
         print(f"Index Selection Finished in {total_runtime} seconds")
@@ -170,9 +183,16 @@ class P1IndexSelection:
 
     @staticmethod
     def print_indexes(best_indexes):
+        max_runtime = max([x[1] for x in best_indexes]
+                          )
+        if max_runtime == 0:
+            max_runtime = 1
+        max_cost = max([x[2] for x in best_indexes])
+        if max_cost == 0:
+            max_cost = 1
         for name, runtime, cost, indexes in best_indexes:
             print(
-                f"====== {name}, cost: {cost:.4f}, runtime: {runtime:.4f} ======= \nIndexes: {indexes}\n")
+                f"====== {name}, cost: {cost:.4f}, runtime: {runtime:.4f}, weighted_cost: {cost/max_cost+runtime/max_runtime:.4f} ======= \nIndexes: {indexes}\n")
 
     def save_indexes(self, indexes):
         save_dir = os.path.join(os.getcwd(), f"indexes_results/")

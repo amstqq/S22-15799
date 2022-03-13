@@ -90,6 +90,9 @@ class DatabaseConnector:
 
         return plan
 
+    def show_curr_indexes(self):
+        raise NotImplementedError
+
     def table_exists(self, table_name):
         raise NotImplementedError
 
