@@ -86,7 +86,7 @@ class P1IndexSelection:
         self.db_connector.drop_indexes()
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=1000)
+            self.workload_csv_path, sample_size=200)
 
         # Set the random seed to obtain deterministic statistics (and cost estimations)
         # because ANALYZE (and alike) use sampling for large tables
@@ -155,9 +155,9 @@ class P1IndexSelection:
             print(
                 f"{algorithm_config['name']} finished in {algo_time} seconds...")
 
-        # Store all indexes in sorted order
-        sort_index = 1 if "number_of_actual_runs" in cfg and cfg["number_of_actual_runs"] > 0 else 0
-        best_indexes_all_algorithms.sort(key=lambda x: x[sort_index])
+        # Store all indexes in sorted order, weight cost by sample runtime
+        # sort_index = 1 if "number_of_actual_runs" in cfg and cfg["number_of_actual_runs"] > 0 else 0
+        best_indexes_all_algorithms.sort(key=lambda x: (x[1]+1) * x[2])
 
         total_runtime = round(time.time() - total_runtime, 2)
         print(f"Index Selection Finished in {total_runtime} seconds")
