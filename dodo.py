@@ -26,6 +26,7 @@
 #     }
 
 from selection.project1_index_selection import P1IndexSelection
+from doit.action import CmdAction
 
 
 def project1_setup():
@@ -42,20 +43,16 @@ def task_project1():
     # CREATE EXTENSION hypopg;
     # Install dexter
 
-    def run_index_selector(workload_csv, timeout):
-        print(f"dodo received workload CSV: {workload_csv}")
-        print(f"dodo received timeout: {timeout}")
-        ids = P1IndexSelection(workload_csv, None,
-                               disable_output_files=True)
-        ids.run()
+    def run_index_selector(workload_csv):
+        print(f"dodo file receive file {workload_csv}...")
+        index_selection = P1IndexSelection(workload_csv, None,
+                                           disable_output_files=True)
+        index_selection.run()
 
     return {
         "actions": [
             'echo "Faking action generation."',
             run_index_selector,
-            # 'echo "SELECT 1;" > actions.sql',
-            # 'echo "SELECT 2;" >> actions.sql',
-            # 'echo \'{"VACUUM": true}\' > config.json',
         ],
         "uptodate": [False],
         "verbosity": 2,

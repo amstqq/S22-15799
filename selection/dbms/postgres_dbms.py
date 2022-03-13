@@ -17,7 +17,7 @@ class PostgresDatabaseConnector(DatabaseConnector):
 
         self.create_connection()
 
-        # self.set_random_seed()
+        self.set_random_seed()
         logging.debug("Postgres connector created: {}".format(db_name))
 
     def create_connection(self):
@@ -29,7 +29,7 @@ class PostgresDatabaseConnector(DatabaseConnector):
         self._cursor = self._connection.cursor()
 
     def enable_simulation(self):
-        self.exec_only("create extension hypopg")
+        self.exec_only("create extension IF NOT EXISTS hypopg")
         self.commit()
 
     def database_names(self):

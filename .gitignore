@@ -3,3 +3,5 @@ index_selection_evaluation/
 __pycache__
 .ipynb_checkpoints/*
 .vscode/*
+
+indexes_results/

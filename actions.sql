@@ -1,0 +1,9 @@
+create index trust_trust_idx on trust (trust);
+create index useracct_u_id_idx on useracct (u_id);
+create index item_i_id_idx on item (i_id);
+create index useracct_name_idx on useracct (name);
+create index trust_target_u_id_idx on trust (target_u_id);
+create index review_u_id_idx on review (u_id);
+create index trust_source_u_id_idx on trust (source_u_id);
+create index review_rating_idx on review (rating);
+create index review_i_id_idx on review (i_id);
