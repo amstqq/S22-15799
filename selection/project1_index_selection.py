@@ -86,7 +86,7 @@ class P1IndexSelection:
         self.db_connector.drop_indexes()
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=5000)
+            self.workload_csv_path, sample_size=1000)
 
         # Set the random seed to obtain deterministic statistics (and cost estimations)
         # because ANALYZE (and alike) use sampling for large tables
