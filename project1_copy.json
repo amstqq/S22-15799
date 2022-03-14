@@ -4,6 +4,15 @@
     "number_of_actual_runs": 0,
     "algorithms": [
         {
+            "name": "auto_admin",
+            "parameters": {
+                "max_indexes": [4, 6, 8, 10, 12, 14],
+                "max_indexes_naive": 2,
+                "max_index_width": 2
+            },
+            "timeout": 300
+        },
+        {
             "name": "drop",
             "parameters": {
                 "max_indexes": [4, 6, 8, 10, 12, 14]

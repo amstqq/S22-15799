@@ -5,3 +5,4 @@ __pycache__
 .vscode/*
 
 indexes_results/
+grading/

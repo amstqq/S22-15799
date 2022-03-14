@@ -70,6 +70,8 @@ class P1IndexSelection:
         self.workload_generator = WorkloadGenerator(
             self.workload_csv_path, sample_size=1000)
 
+        self.setup_db_connector()
+
         print(f"Running on benchmark {self.workload_name}...")
 
     def run(self, debug=False):
@@ -77,7 +79,44 @@ class P1IndexSelection:
             logging.getLogger().setLevel(logging.DEBUG)
         logging.info("Starting Index Selection Evaluation")
 
-        self._run_algorithms()
+        # Try to load saved indexes pickle file
+        indexes = self.load_most_recent_indexes()
+        if indexes == None:
+            # Generate indexes if none found
+            self._run_algorithms()
+            return
+
+        grading_goodput = self.load_most_recent_grading_result()
+        # goodput = None
+        if grading_goodput == None:
+            self._run_algorithms()
+            return
+
+        i = 0
+        for _, _, _, _, goodput in indexes:
+            print(goodput, grading_goodput)
+            if goodput != -1:
+                i += 1
+            else:
+                indexes[i] = list(indexes[i])
+                indexes[i][4] = grading_goodput
+                i += 1
+                break
+        self.save_indexes(indexes)
+        self.print_indexes(indexes)
+
+        # All indexes have been benchmarked. Return index with most goodput
+        if i == len(indexes):
+            print(indexes)
+            best_index = sorted(indexes, key=lambda x: x[4], reverse=True)[0]
+            self.write_actions_sql_file(best_index[3])
+            print("Writing actions.sql...")
+            self.print_indexes([best_index])
+        else:
+            # Benchmark next index
+            self.write_actions_sql_file(indexes[i][3])
+            print("Writing actions.sql...")
+            self.print_indexes([indexes[i]])
 
     def _run_algorithms(self):
         with open(self.config_file) as f:
@@ -88,10 +127,7 @@ class P1IndexSelection:
         self.db_connector.enable_simulation()
         # Show current indexes
         self.db_connector.show_curr_indexes()
-        # TODO: REMOVE DROP INDEX, or print existing indexes
         self.db_connector.drop_indexes()
-        # TODO: remove!
-        self.db_connector.show_curr_indexes()
 
         # Set the random seed to obtain deterministic statistics (and cost estimations)
         # because ANALYZE (and alike) use sampling for large tables
@@ -155,13 +191,13 @@ class P1IndexSelection:
                         best_runtime = 0
                         best_indexes = indexes
             best_indexes_all_algorithms.append(
-                (algorithm_config["name"], best_runtime, best_cost, best_indexes))
+                [algorithm_config["name"], best_runtime, best_cost, best_indexes, -1])  # The last element is goodput which will be obtained from the grading script later
             algo_time = round(time.time() - algo_start_time, 2)
             print(
                 f"{algorithm_config['name']} finished in {algo_time} seconds...")
 
         # Store all indexes in sorted order, weight cost by sample runtime
-        # Weighted cost = cost * (1 + runtime/max_runtime)
+        # Weighted cost = scaled_cost + scaled_weight
         # Runtime = 0 if self.number_of_actual_runs = 0, ie. no sample query is run
         # Cost is computed by cost estimator. Runtime is obtained from running sample queries.
         max_runtime = max([x[1] for x in best_indexes_all_algorithms]
@@ -172,8 +208,8 @@ class P1IndexSelection:
         if max_cost == 0:
             max_cost = 1
 
-        best_indexes_all_algorithms.sort(
-            key=lambda x: x[2]/max_cost+x[1]/max_runtime)
+        best_indexes_all_algorithms = sorted(best_indexes_all_algorithms,
+                                             key=lambda x: x[2]/max_cost+x[1]/max_runtime)[:3]  # TODO: change how many indexes to benchmark depending on time limits
 
         total_runtime = round(time.time() - total_runtime, 2)
         print(f"Index Selection Finished in {total_runtime} seconds")
@@ -181,9 +217,9 @@ class P1IndexSelection:
         self.save_indexes(best_indexes_all_algorithms)
         self.print_indexes(best_indexes_all_algorithms)
         self.write_actions_sql_file(
-            best_indexes_all_algorithms[0][3], './actions.sql')
+            best_indexes_all_algorithms[0][3])
 
-    @staticmethod
+    @ staticmethod
     def print_indexes(best_indexes):
         max_runtime = max([x[1] for x in best_indexes]
                           )
@@ -192,27 +228,51 @@ class P1IndexSelection:
         max_cost = max([x[2] for x in best_indexes])
         if max_cost == 0:
             max_cost = 1
-        for name, runtime, cost, indexes in best_indexes:
+        for name, runtime, cost, indexes, goodput in best_indexes:
             print(
-                f"====== {name}, cost: {cost:.4f}, runtime: {runtime:.4f}, weighted_cost: {cost/max_cost+runtime/max_runtime:.4f} ======= \nIndexes: {indexes}\n")
+                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, runtime: {runtime:.4f}, weighted_cost: {cost/max_cost+runtime/max_runtime:.4f} ======= \nIndexes: {indexes}\n")
 
     def save_indexes(self, indexes):
         save_dir = os.path.join(os.getcwd(), f"indexes_results/")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        iteration = 1
         filepath = os.path.join(
-            save_dir, f"{self.workload_name}_{iteration}.pickle")
-        while os.path.exists(filepath):
-            iteration += 1
-            filepath = os.path.join(
-                save_dir, f"{self.workload_name}_{iteration}.pickle")
+            save_dir, f"{self.workload_name}.pickle")
 
-        with open(filepath, "ba") as file:
+        with open(filepath, "wb") as file:
+            print(f'Saving index to {filepath}...')
             pickle.dump(indexes, file)
 
-    def load_indexes(self):
+    def load_most_recent_grading_result(self):
+        save_dir = os.path.join(os.getcwd(), f"grading/")
+        if not os.path.exists(save_dir):
+            return None
+
+        dir_names = os.listdir(save_dir)
+        dir_names = sorted([
+            dir_name for dir_name in dir_names if 'baseline' not in dir_name], reverse=True)
+
+        if len(dir_names) == 0:
+            return None
+
+        for dir_name in dir_names:
+            iter_dir_name = os.path.join(save_dir, dir_name)
+            iter_filenames = os.listdir(iter_dir_name)
+            if self.workload_name not in iter_filenames[0]:
+                continue
+            result_filename = [
+                fn for fn in iter_filenames if 'summary.json' in fn][0]
+
+            result_filename = os.path.join(iter_dir_name, result_filename)
+            print(f"loading results from {result_filename}...")
+            with open(result_filename) as f:
+                result_json = json.load(f)
+                return result_json["Goodput (requests/second)"]
+
+        return None
+
+    def load_most_recent_indexes(self):
         save_dir = os.path.join(os.getcwd(), f"indexes_results/")
         if not os.path.exists(save_dir):
             return None
@@ -226,21 +286,33 @@ class P1IndexSelection:
             return None
 
         most_recent_filename = most_recent_filenames[0]
+        print(f"loading indexes from {most_recent_filename}...")
         with open(os.path.join(save_dir, most_recent_filename), "rb") as file:
-            indexes = pickle.load(file)
+            indexes = list(pickle.load(file))
 
         return indexes
 
-    def write_actions_sql_file(self, indexes: list, filename: str) -> list:
+    def write_actions_sql_file(self, indexes: list) -> list:
         print("Generating actions.sql...")
         with open('./actions.sql', 'w') as file:
+            # Drop all old indexes, excluding UNIQUE ones
+            drop_indexes = self.db_connector.get_indexes_to_drop()
+            for index_name, index_df in drop_indexes:
+                # Ignore PRIMARY KEY or UNIQUE indexes
+                if 'UNIQUE' in index_df:
+                    continue
+                drop_stmt = "drop index {};".format(index_name)
+                file.write(drop_stmt)
+                file.write('\n')
+
+            # Write create index statements
             for i, index in enumerate(indexes):
                 table_name = index.table()
-                statement = (
+                stmt = (
                     f"create index {index.index_idx()} "
                     f"on {table_name} ({index.joined_column_names()});"
                 )
-                file.write(statement)
+                file.write(stmt)
                 file.write('\n')
 
     # Parameter list example: {"max_indexes": [5, 10, 20]}

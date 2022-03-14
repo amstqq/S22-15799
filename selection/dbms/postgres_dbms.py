@@ -138,10 +138,14 @@ class PostgresDatabaseConnector(DatabaseConnector):
         size = size[0]
         index.estimated_size = size * 8 * 1024
 
-    def drop_indexes(self):
-        logging.info("Dropping indexes")
+    def get_indexes_to_drop(self):
         stmt = "select indexname, indexdef from pg_indexes where schemaname='public'"
         indexes = self.exec_fetch(stmt, one=False)
+        return indexes
+
+    def drop_indexes(self):
+        logging.info("Dropping indexes")
+        indexes = self.get_indexes_to_drop()
         for index_name, index_df in indexes:
             # Ignore PRIMARY KEY or UNIQUE indexes
             if 'UNIQUE' in index_df:
