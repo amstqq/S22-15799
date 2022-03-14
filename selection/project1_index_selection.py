@@ -68,7 +68,7 @@ class P1IndexSelection:
 
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=1)
+            self.workload_csv_path, sample_size=1000)
 
         self.setup_db_connector()
 
