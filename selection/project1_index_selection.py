@@ -68,7 +68,7 @@ class P1IndexSelection:
 
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=1000)
+            self.workload_csv_path, sample_size=1)
 
         self.setup_db_connector()
 
@@ -83,40 +83,70 @@ class P1IndexSelection:
         indexes = self.load_most_recent_indexes()
         if indexes == None:
             # Generate indexes if none found
-            self._run_algorithms()
+            new_index = self._run_algorithms()
+            self.save_indexes([new_index])
+            self.write_actions_sql_file(
+                new_index[3])
             return
 
         grading_goodput = self.load_most_recent_grading_result()
         # goodput = None
         if grading_goodput == None:
-            self._run_algorithms()
+            # Generate indexes if none found
+            new_index = self._run_algorithms()
+            self.save_indexes([new_index])
+            self.write_actions_sql_file(
+                new_index[3])
             return
 
-        i = 0
-        for _, _, _, _, goodput in indexes:
-            print(goodput, grading_goodput)
-            if goodput != -1:
-                i += 1
-            else:
-                indexes[i] = list(indexes[i])
-                indexes[i][4] = grading_goodput
-                i += 1
-                break
-        self.save_indexes(indexes)
-        self.print_indexes(indexes)
+        max_iterations = 5  # TODO: change based on timeout
 
-        # All indexes have been benchmarked. Return index with most goodput
-        if i == len(indexes):
-            print(indexes)
+        # Update goodput of latest index
+        if len(indexes) != max_iterations or indexes[-1] != -1:
+            indexes[-1] = list(indexes[-1])
+            indexes[-1][4] = grading_goodput
+
+        # If benchmarked 5 times, then just return the best result so far
+        if len(indexes) == max_iterations:  # TODO: change based on timeout
+            self.save_indexes(indexes)
             best_index = sorted(indexes, key=lambda x: x[4], reverse=True)[0]
             self.write_actions_sql_file(best_index[3])
             print("Writing actions.sql...")
-            self.print_indexes([best_index])
+            self.print_indexes(indexes)
         else:
             # Benchmark next index
-            self.write_actions_sql_file(indexes[i][3])
-            print("Writing actions.sql...")
-            self.print_indexes([indexes[i]])
+            # Generate indexes if none found
+            new_index = self._run_algorithms()
+            self.save_indexes(indexes + [new_index])
+            self.write_actions_sql_file(
+                new_index[3])
+            self.print_indexes(indexes + [new_index])
+
+        # i = 0
+        # for _, _, _, _, goodput in indexes:
+        #     print(goodput, grading_goodput)
+        #     if goodput != -1:
+        #         i += 1
+        #     else:
+        #         indexes[i] = list(indexes[i])
+        #         indexes[i][4] = grading_goodput
+        #         i += 1
+        #         break
+        # self.save_indexes(indexes)
+        # self.print_indexes(indexes)
+
+        # # All indexes have been benchmarked. Return index with most goodput
+        # if i == len(indexes):
+        #     print(indexes)
+        #     best_index = sorted(indexes, key=lambda x: x[4], reverse=True)[0]
+        #     self.write_actions_sql_file(best_index[3])
+        #     print("Writing actions.sql...")
+        #     self.print_indexes([best_index])
+        # else:
+        #     # Benchmark next index
+        #     self.write_actions_sql_file(indexes[i][3])
+        #     print("Writing actions.sql...")
+        #     self.print_indexes([indexes[i]])
 
     def _run_algorithms(self):
         with open(self.config_file) as f:
@@ -208,16 +238,18 @@ class P1IndexSelection:
         if max_cost == 0:
             max_cost = 1
 
-        best_indexes_all_algorithms = sorted(best_indexes_all_algorithms,
-                                             key=lambda x: x[2]/max_cost+x[1]/max_runtime)[:3]  # TODO: change how many indexes to benchmark depending on time limits
+        best_index_all_algorithms = sorted(best_indexes_all_algorithms,
+                                           key=lambda x: x[2]/max_cost+x[1]/max_runtime)[0]  # TODO: change how many indexes to benchmark depending on time limits
 
         total_runtime = round(time.time() - total_runtime, 2)
         print(f"Index Selection Finished in {total_runtime} seconds")
 
-        self.save_indexes(best_indexes_all_algorithms)
-        self.print_indexes(best_indexes_all_algorithms)
-        self.write_actions_sql_file(
-            best_indexes_all_algorithms[0][3])
+        return best_index_all_algorithms
+
+        # self.save_indexes([best_indexes_all_algorithms])
+        # self.print_indexes([best_indexes_all_algorithms])
+        # self.write_actions_sql_file(
+        #     best_indexes_all_algorithms[3])
 
     @ staticmethod
     def print_indexes(best_indexes):
@@ -251,7 +283,10 @@ class P1IndexSelection:
 
         dir_names = os.listdir(save_dir)
         dir_names = sorted([
-            dir_name for dir_name in dir_names if 'baseline' not in dir_name], reverse=True)
+            dir_name for dir_name in dir_names if 'baseline' not in dir_name],
+            key=lambda x: int(x.rsplit('_', 1)[1]),
+            reverse=True)
+        print(dir_names)
 
         if len(dir_names) == 0:
             return None
