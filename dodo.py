@@ -25,6 +25,7 @@ def task_project1():
         "actions": [
             'echo "Faking action generation."',
             run_index_selector,
+            'echo \'{"VACUUM": true}\' > config.json',
         ],
         "uptodate": [False],
         "verbosity": 2,

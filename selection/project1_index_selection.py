@@ -90,6 +90,8 @@ class P1IndexSelection:
         self.db_connector.show_curr_indexes()
         # TODO: REMOVE DROP INDEX, or print existing indexes
         self.db_connector.drop_indexes()
+        # TODO: remove!
+        self.db_connector.show_curr_indexes()
 
         # Set the random seed to obtain deterministic statistics (and cost estimations)
         # because ANALYZE (and alike) use sampling for large tables

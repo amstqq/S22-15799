@@ -140,10 +140,12 @@ class PostgresDatabaseConnector(DatabaseConnector):
 
     def drop_indexes(self):
         logging.info("Dropping indexes")
-        stmt = "select indexname from pg_indexes where schemaname='public'"
+        stmt = "select indexname, indexdef from pg_indexes where schemaname='public'"
         indexes = self.exec_fetch(stmt, one=False)
-        for index in indexes:
-            index_name = index[0]
+        for index_name, index_df in indexes:
+            # Ignore PRIMARY KEY or UNIQUE indexes
+            if 'UNIQUE' in index_df:
+                continue
             drop_stmt = "drop index {}".format(index_name)
             logging.debug("Dropping index {}".format(index_name))
             self.exec_only(drop_stmt)
