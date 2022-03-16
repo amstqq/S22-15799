@@ -1,7 +1,7 @@
 {
     "database_system": "postgres",
     "benchmark_name": "epinions",
-    "number_of_actual_runs": 1,
+    "number_of_actual_runs": 0,
     "algorithms": [
         {
             "name": "relaxation",
@@ -9,7 +9,11 @@
                 "budget_MB": [
                     3000,
                     5000,
-                    10000
+                    10000,
+                    20000,
+                    50000,
+                    80000,
+                    100000
                 ],
                 "max_index_width": 2
             },
