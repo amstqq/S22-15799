@@ -19,7 +19,8 @@ def task_project1():
     # Install dexter
 
     def run_index_selector(workload_csv):
-        from selection.project1_index_selection import P1IndexSelection
+        # from selection.project1_index_selection import P1IndexSelection
+        from selection.P1IndexSelectionTrain import P1IndexSelectionTrain
 
         print(f"dodo file receive file {workload_csv}...")
         index_selection = P1IndexSelection(workload_csv, None,
