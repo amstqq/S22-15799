@@ -483,6 +483,7 @@ class WorkloadGenerator:
                 self._db_schema[table_name] = set(column_name)
             else:
                 self._db_schema[table_name].add(column_name)
+        print(tables_and_columns)
         self._build_table_object()
 
         print(f"Preprocessing CSV logs in: {workload_csv_path}")
