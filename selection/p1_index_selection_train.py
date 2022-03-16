@@ -97,6 +97,7 @@ class P1IndexSelection:
             self.save_indexes([new_index])
             self.write_actions_sql_file(
                 new_index[3])
+            self.print_indexes([new_index])
             return
 
         grading_goodput = self.load_most_recent_grading_result()
@@ -106,16 +107,20 @@ class P1IndexSelection:
             self.save_indexes([new_index])
             self.write_actions_sql_file(
                 new_index[3])
+            self.print_indexes([new_index])
             return
 
         # Update goodput of latest index
         if indexes[-1] != -1:
             indexes[-1] = list(indexes[-1])
             indexes[-1][4] = grading_goodput
+        self.print_indexes(indexes)
 
         # Benchmark next index
         iteration = len(indexes)
         new_index = self._run_algorithms(iteration)
+
+        # No more indexes to benchmark, None is returned
         if new_index == None:
             return
 
@@ -142,9 +147,6 @@ class P1IndexSelection:
         # because ANALYZE (and alike) use sampling for large tables
         self.db_connector.create_statistics()
         self.db_connector.commit()
-
-        print("Setup complete!\nStart running algorithms...")
-
         total_runtime = time.time()
 
         # Obtain best index from each algorithm
@@ -160,7 +162,7 @@ class P1IndexSelection:
 
             if len(configs) == config_index:
                 return None
-
+            print("Setup complete!\nStart running algorithms...")
             algorithm_config_unfolded = configs[config_index]
             start_time = time.time()
             # Generate new sample workload of sample_size=x
@@ -187,7 +189,7 @@ class P1IndexSelection:
 
             # The last element is goodput which will be obtained from the grading script later
             best_indexes_all_algorithms = [
-                algorithm_config["name"], cfg, cost, indexes, -1]
+                algorithm_config["name"], cfg["parameters"], cost, indexes, -1]
             algo_time = round(time.time() - algo_start_time, 2)
             print(
                 f"{algorithm_config['name']} finished in {algo_time} seconds...")
@@ -199,16 +201,9 @@ class P1IndexSelection:
 
     @ staticmethod
     def print_indexes(best_indexes):
-        max_runtime = max([x[1] for x in best_indexes]
-                          )
-        if max_runtime == 0:
-            max_runtime = 1
-        max_cost = max([x[2] for x in best_indexes])
-        if max_cost == 0:
-            max_cost = 1
-        for name, runtime, cost, indexes, goodput in best_indexes:
+        for name, parameters, cost, indexes, goodput in best_indexes:
             print(
-                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, runtime: {runtime:.4f}, weighted_cost: {cost/max_cost+runtime/max_runtime:.4f} ======= \nIndexes: {indexes}\n")
+                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, params: {parameters}, Indexes: {indexes}\n")
 
     def save_indexes(self, indexes):
         save_dir = os.path.join(os.getcwd(), f"indexes_results/")
@@ -232,7 +227,6 @@ class P1IndexSelection:
             dir_name for dir_name in dir_names if 'baseline' not in dir_name],
             key=lambda x: int(x.rsplit('_', 1)[1]),
             reverse=True)
-        print(dir_names)
 
         if len(dir_names) == 0:
             return None
