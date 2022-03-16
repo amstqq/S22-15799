@@ -65,7 +65,7 @@ class P1IndexSelection:
         self.config_file = CONFIG_PATH
         if "epinions" in workload_csv_path:
             self.workload_name = "epinions"
-            sample_size = 1000
+            sample_size = 10000
             self.config_file = "./epinions.json"
         elif "indexjungle" in workload_csv_path:
             self.workload_name = "indexjungle"
@@ -80,7 +80,8 @@ class P1IndexSelection:
 
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, self.workload_name, self.db_connector, sample_size=sample_size)
+            self.workload_csv_path, self.workload_name, self.db_connector, sample_size=sample_size
+        )
 
         print(f"Running on benchmark {self.workload_name}...")
 
@@ -95,8 +96,7 @@ class P1IndexSelection:
             # Generate indexes if none found
             new_index = self._run_algorithms(0)
             self.save_indexes([new_index])
-            self.write_actions_sql_file(
-                new_index[3])
+            self.write_actions_sql_file(new_index[3])
             self.print_indexes([new_index])
             return
 
@@ -105,8 +105,7 @@ class P1IndexSelection:
             # Generate indexes if none found
             new_index = self._run_algorithms(0)
             self.save_indexes([new_index])
-            self.write_actions_sql_file(
-                new_index[3])
+            self.write_actions_sql_file(new_index[3])
             self.print_indexes([new_index])
             return
 
@@ -125,8 +124,7 @@ class P1IndexSelection:
             return
 
         self.save_indexes(indexes + [new_index])
-        self.write_actions_sql_file(
-            new_index[3])
+        self.write_actions_sql_file(new_index[3])
         self.print_indexes(indexes + [new_index])
 
     def _run_algorithms(self, config_index):
@@ -151,8 +149,7 @@ class P1IndexSelection:
 
         # Obtain best index from each algorithm
         best_indexes_all_algorithms = None
-        number_of_actual_runs = config[
-            "number_of_actual_runs"] if "number_of_actual_runs" in config else 0
+        number_of_actual_runs = config["number_of_actual_runs"] if "number_of_actual_runs" in config else 0
         for algorithm_config in config["algorithms"]:
             algo_start_time = time.time()
             # There are multiple configs if there is a parameter list
@@ -168,8 +165,7 @@ class P1IndexSelection:
             # Generate new sample workload of sample_size=x
             self.workload = self.workload_generator.generate_sample_workload()
             cfg = algorithm_config_unfolded
-            indexes, what_if, cost_requests, cache_hits = self._run_algorithm(
-                cfg)
+            indexes, what_if, cost_requests, cache_hits = self._run_algorithm(cfg)
 
             calculation_time = round(time.time() - start_time, 2)
             benchmark = Benchmark(
@@ -188,33 +184,31 @@ class P1IndexSelection:
             cost, runtime, hit = benchmark.benchmark()
 
             # The last element is goodput which will be obtained from the grading script later
-            best_indexes_all_algorithms = [
-                algorithm_config["name"], cfg["parameters"], cost, indexes, -1]
+            best_indexes_all_algorithms = [algorithm_config["name"], cfg["parameters"], cost, indexes, -1]
             algo_time = round(time.time() - algo_start_time, 2)
-            print(
-                f"{algorithm_config['name']} finished in {algo_time} seconds...")
+            print(f"{algorithm_config['name']} finished in {algo_time} seconds...")
 
         total_runtime = round(time.time() - total_runtime, 2)
         print(f"Index Selection Finished in {total_runtime} seconds")
 
         return best_indexes_all_algorithms
 
-    @ staticmethod
+    @staticmethod
     def print_indexes(best_indexes):
         for name, parameters, cost, indexes, goodput in best_indexes:
             print(
-                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, params: {parameters}, Indexes: {indexes}\n")
+                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, params: {parameters}, Indexes: {indexes}\n"
+            )
 
     def save_indexes(self, indexes):
         save_dir = os.path.join(os.getcwd(), f"indexes_results/")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        filepath = os.path.join(
-            save_dir, f"{self.workload_name}.pickle")
+        filepath = os.path.join(save_dir, f"{self.workload_name}.pickle")
 
         with open(filepath, "wb") as file:
-            print(f'Saving index to {filepath}...')
+            print(f"Saving index to {filepath}...")
             pickle.dump(indexes, file)
 
     def load_most_recent_grading_result(self):
@@ -223,10 +217,11 @@ class P1IndexSelection:
             return None
 
         dir_names = os.listdir(save_dir)
-        dir_names = sorted([
-            dir_name for dir_name in dir_names if 'baseline' not in dir_name],
-            key=lambda x: int(x.rsplit('_', 1)[1]),
-            reverse=True)
+        dir_names = sorted(
+            [dir_name for dir_name in dir_names if "baseline" not in dir_name],
+            key=lambda x: int(x.rsplit("_", 1)[1]),
+            reverse=True,
+        )
 
         if len(dir_names) == 0:
             return None
@@ -236,8 +231,7 @@ class P1IndexSelection:
             iter_filenames = os.listdir(iter_dir_name)
             if self.workload_name not in iter_filenames[0]:
                 continue
-            result_filename = [
-                fn for fn in iter_filenames if 'summary.json' in fn][0]
+            result_filename = [fn for fn in iter_filenames if "summary.json" in fn][0]
 
             result_filename = os.path.join(iter_dir_name, result_filename)
             print(f"loading results from {result_filename}...")
@@ -254,8 +248,9 @@ class P1IndexSelection:
 
         filenames = os.listdir(save_dir)
 
-        most_recent_filenames = sorted([
-            filename for filename in filenames if self.workload_name in filename], reverse=True)
+        most_recent_filenames = sorted(
+            [filename for filename in filenames if self.workload_name in filename], reverse=True
+        )
 
         if len(most_recent_filenames) == 0:
             return None
@@ -268,29 +263,26 @@ class P1IndexSelection:
         return indexes
 
     def write_drop_actions_sql_file(self):
-        with open('./actions.sql', 'w') as file:
+        with open("./actions.sql", "w") as file:
             # Drop all old indexes, excluding UNIQUE ones
             drop_indexes = self.db_connector.get_indexes_to_drop()
             for index_name, index_df in drop_indexes:
                 # Ignore PRIMARY KEY or UNIQUE indexes
-                if 'UNIQUE' in index_df:
+                if "UNIQUE" in index_df:
                     continue
                 drop_stmt = "drop index {};".format(index_name)
                 file.write(drop_stmt)
-                file.write('\n')
+                file.write("\n")
 
     def write_actions_sql_file(self, indexes: list) -> list:
         print("Generating actions.sql...")
-        with open('./actions.sql', 'w') as file:
+        with open("./actions.sql", "w") as file:
             # Write create index statements
             for i, index in enumerate(indexes):
                 table_name = index.table()
-                stmt = (
-                    f"create index {index.index_idx()} "
-                    f"on {table_name} ({index.joined_column_names()});"
-                )
+                stmt = f"create index {index.index_idx()} " f"on {table_name} ({index.joined_column_names()});"
                 file.write(stmt)
-                file.write('\n')
+                file.write("\n")
 
     # Parameter list example: {"max_indexes": [5, 10, 20]}
     # Creates config for each value
@@ -323,8 +315,7 @@ class P1IndexSelection:
         self.db_connector.commit()
         self.setup_db_connector()
 
-        algorithm = self.create_algorithm_object(
-            config["name"], config["parameters"])
+        algorithm = self.create_algorithm_object(config["name"], config["parameters"])
         logging.info(f"Running algorithm {config}")
         indexes = algorithm.calculate_best_indexes(self.workload)
         logging.info(f"Indexes found: {indexes}")
@@ -335,9 +326,7 @@ class P1IndexSelection:
             if config["name"] == "db2advis"
             else algorithm.cost_evaluation.cost_requests
         )
-        cache_hits = (
-            0 if config["name"] == "db2advis" else algorithm.cost_evaluation.cache_hits
-        )
+        cache_hits = 0 if config["name"] == "db2advis" else algorithm.cost_evaluation.cache_hits
         return indexes, what_if, cost_requests, cache_hits
 
     def create_algorithm_object(self, algorithm_name, parameters) -> AllIndexesAlgorithm:
@@ -348,5 +337,4 @@ class P1IndexSelection:
         if self.db_connector:
             logging.info("Create new database connector (closing old)")
             self.db_connector.close()
-        self.db_connector = PostgresDatabaseConnector(
-            self.db_name, self.db_user, self.db_pass)
+        self.db_connector = PostgresDatabaseConnector(self.db_name, self.db_user, self.db_pass)
