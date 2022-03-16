@@ -1,11 +1,8 @@
-index_selection_evaluation/*
+index_selection_evaluation/
 *.csv
-__pycache__
-.ipynb_checkpoints/*
-.vscode/*
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
 
 indexes_results/
 grading/
-
-*.zip*
-hypopg-master/
