@@ -33,7 +33,6 @@ ALGORITHMS = {
 DEFAULT_DB = "project1db"
 DEFAULT_USER = "project1user"
 DEFAULT_PASS = "project1pass"
-CONFIG_PATH = "./indexjungle.json"
 
 
 class IndexSelection:
@@ -61,19 +60,20 @@ class IndexSelection:
         # TODO: Add other paths
         self.workload_name = "epinions"
         sample_size = 1000
-        self.config_file = CONFIG_PATH
+        config_file = "./configs/grade_configs/" if not data_collection else "./configs/data_collection_configs/"
+
         if "epinions" in workload_csv_path:
             self.workload_name = "epinions"
             sample_size = 1000 if not data_collection else 10000
-            self.config_file = "./epinions.json"
+            self.config_file = config_file + "epinions.json"
         elif "indexjungle" in workload_csv_path:
             self.workload_name = "indexjungle"
             sample_size = 1000 if not data_collection else 10000
-            self.config_file = "./indexjungle.json"
-        elif "timeseries" in workload_csv_path:
+            self.config_file = config_file + "indexjungle.json"
+        else:
             self.workload_name = "timeseries"
             sample_size = 1000 if not data_collection else 10000
-            self.config_file = "./timeseries.json"
+            self.config_file = config_file + "timeseries.json"
 
         self.setup_db_connector()
 
@@ -280,6 +280,7 @@ class IndexSelection:
 
     def write_drop_actions_sql_file(self):
         with open('./actions.sql', 'w') as file:
+            file.write('\n')
             # Drop all old indexes, excluding UNIQUE ones
             drop_indexes = self.db_connector.get_indexes_to_drop()
             for index_name, index_df in drop_indexes:
@@ -292,7 +293,7 @@ class IndexSelection:
 
     def write_actions_sql_file(self, indexes: list) -> list:
         print("Generating actions.sql...")
-        with open('./actions.sql', 'w') as file:
+        with open('./actions.sql', 'a') as file:
             # Write create index statements
             for i, index in enumerate(indexes):
                 table_name = index.table()

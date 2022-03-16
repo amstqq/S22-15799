@@ -10,3 +10,4 @@ pandarallel
 plumbum
 pandas
 numpy
+matplotlib
