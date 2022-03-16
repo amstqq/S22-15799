@@ -74,8 +74,6 @@ class IndexSelection:
             self.workload_name = "timeseries"
             sample_size = 1000 if not data_collection else 10000
             self.config_file = "./timeseries.json"
-        self.workload_name = "epinions"  # TODO: REMOVE
-        sample_size = 1000
 
         self.setup_db_connector()
 
@@ -115,9 +113,9 @@ class IndexSelection:
                 return
 
         # Update goodput of latest index
-        if indexes[-1] != -1:
+        if indexes[-1][-1] == -1:
             indexes[-1] = list(indexes[-1])
-            indexes[-1][4] = grading_goodput
+            indexes[-1][-1] = grading_goodput
 
         # Benchmark next index
         iteration = len(indexes)
