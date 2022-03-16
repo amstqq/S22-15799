@@ -1,13 +1,12 @@
-from selection.project1_index_selection import P1IndexSelection
 
 
-def project1_setup():
+def task_project1_setup():
     return {
         "actions": [
-            'install.sh'
-        ]
+            'sh install.sh'
+        ], 
+        "verbosity": 2,
     }
-
 
 def task_project1():
     """
@@ -20,6 +19,8 @@ def task_project1():
     # Install dexter
 
     def run_index_selector(workload_csv):
+        from selection.project1_index_selection import P1IndexSelection
+
         print(f"dodo file receive file {workload_csv}...")
         index_selection = P1IndexSelection(workload_csv, None,
                                            disable_output_files=True)

@@ -1,8 +1,14 @@
-sudo apt-get install zip unzip
-yes | pip install -r requirements.txt
+sudo apt install python3 python3-pip
+
+pip install -r requirements.txt
 
 # Install Hypopg - https://hypopg.readthedocs.io/en/rel1_stable/installation.html
-sudo apt -y install postgresql-14-hypopg
+wget https://github.com/HypoPG/hypopg/archive/master.zip
+unzip master.zip
+cd hypopg-master
+make
+sudo make install
+cd ../
 
 
 # Install dexter - https://github.com/ankane/dexter/blob/master/guides/Linux.md

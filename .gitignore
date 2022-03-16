@@ -6,3 +6,6 @@ __pycache__
 
 indexes_results/
 grading/
+
+*.zip*
+hypopg-master/
