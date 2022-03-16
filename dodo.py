@@ -2,7 +2,11 @@ from selection.project1_index_selection import P1IndexSelection
 
 
 def project1_setup():
-    pass
+    return {
+        "actions": [
+            'sh install.sh'
+        ]
+    }
 
 
 def task_project1():

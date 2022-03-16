@@ -1,4 +1,4 @@
-index_selection_evaluation/
+index_selection_evaluation/*
 *.csv
 __pycache__
 .ipynb_checkpoints/*
