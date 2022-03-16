@@ -36,7 +36,19 @@ class PostgresDatabaseConnector(DatabaseConnector):
         result = self.exec_fetch("select datname from pg_database", False)
         return [x[0] for x in result]
 
+    def table_and_column_names(self):
+        stmt = "SELECT table_name, " \
+            "column_name " \
+            "from information_schema.columns " \
+            "where table_schema not in ('information_schema', 'pg_catalog') " \
+            "order by table_schema, " \
+            "table_name; "
+
+        result = self.exec_fetch(stmt, False)
+        return result
+
     # Updates query syntax to work in PostgreSQL
+
     def update_query_text(self, text):
         text = text.replace(";\nlimit ", " limit ").replace("limit -1", "")
         text = re.sub(r" ([0-9]+) days\)", r" interval '\1 days')", text)

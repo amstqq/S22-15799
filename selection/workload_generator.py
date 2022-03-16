@@ -45,14 +45,6 @@ class WorkloadGenerator:
         "backend_type",
     ]
 
-    _EPINIONS_SCHEMA = {
-        "item": set(["i_id", "title"]),
-        "useracct": set(["u_id", "name"]),
-        "review": set(["a_id", "u_id", "i_id", "rating", "rank"]),
-        "trust": set(["source_u_id", "target_u_id", "trust", "creation_date"]),
-        "review_rating": set(["u_id", "a_id", "rating", "status", "creation_date", "last_mod_date", "type", "vertical_id"])
-    }
-
     """
     Convert PostgreSQL query logs into pandas DataFrame objects.
     """
@@ -473,7 +465,7 @@ class WorkloadGenerator:
         # self.print_workload(self._workload)
         return self._workload
 
-    def __init__(self, workload_csv_path, sample_size=100, store_query_subst=False):
+    def __init__(self, workload_csv_path, workload_name, db_connector, sample_size=100, store_query_subst=False):
         """
         Args:
             sample_size (int, optional): sample 100 queries from total queries, weighted based on their occurances. Defaults to 100.
@@ -482,12 +474,15 @@ class WorkloadGenerator:
 
         self.tables = {}
         self.columns = {}
+        self._db_schema = {}
 
-        # TODO: Add rest of the schemas here
-        self._db_schema = self._EPINIONS_SCHEMA
-        if "epinions" in workload_csv_path:
-            self._db_schema = self._EPINIONS_SCHEMA
-
+        # Extract database schema
+        tables_and_columns = db_connector.table_and_column_names()
+        for table_name, column_name in tables_and_columns:
+            if table_name not in self._db_schema:
+                self._db_schema[table_name] = set(column_name)
+            else:
+                self._db_schema[table_name].add(column_name)
         self._build_table_object()
 
         print(f"Preprocessing CSV logs in: {workload_csv_path}")

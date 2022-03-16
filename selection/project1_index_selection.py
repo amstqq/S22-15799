@@ -37,11 +37,11 @@ ALGORITHMS = {
 DEFAULT_DB = "project1db"
 DEFAULT_USER = "project1user"
 DEFAULT_PASS = "project1pass"
-CONFIG_PATH = "./project1.json"
+CONFIG_PATH = "./indexjungle.json"
 
 
 class P1IndexSelection:
-    def __init__(self, workload_csv_path, log_level=None, disable_output_files=True):
+    def __init__(self, workload_csv_path, log_level=None, disable_output_files=True, reuse_prev_results=False):
         if "CRITICAL_LOG" == log_level:
             logging.getLogger().setLevel(logging.CRITICAL)
         if "ERROR_LOG" == log_level:
@@ -55,22 +55,35 @@ class P1IndexSelection:
         logging.debug("Init IndexSelection")
         self.db_connector = None
         self.workload = None
-        self.config_file = CONFIG_PATH
         self.db_name = DEFAULT_DB
         self.db_user = DEFAULT_USER
         self.db_pass = DEFAULT_PASS
         self.workload_csv_path = workload_csv_path
+        # Whether indexes generated from previous iterations are reused
+        self.reuse_prev_results = reuse_prev_results
 
         # TODO: Add other paths
+        self.workload_name = "epinions"
+        sample_size = 1000
+        self.config_file = CONFIG_PATH
         if "epinions" in workload_csv_path:
             self.workload_name = "epinions"
-        self.workload_name = "epinions"
+            sample_size = 1000
+            self.config_file = "./epinions.json"
+        elif "indexjungle" in workload_csv_path:
+            self.workload_name = "indexjungle"
+            sample_size = 1000
+            self.config_file = "./indexjungle.json"
+        elif "timeseries" in workload_csv_path:
+            self.workload_name = "timeseries"
+            sample_size = 1000
+            self.config_file = "./timeseries.json"
+
+        self.setup_db_connector()
 
         # Set up Workload generator which reads workload_csv
         self.workload_generator = WorkloadGenerator(
-            self.workload_csv_path, sample_size=1000)
-
-        self.setup_db_connector()
+            self.workload_csv_path, self.workload_name, self.db_connector, sample_size=sample_size)
 
         print(f"Running on benchmark {self.workload_name}...")
 
@@ -78,6 +91,14 @@ class P1IndexSelection:
         if debug:
             logging.getLogger().setLevel(logging.DEBUG)
         logging.info("Starting Index Selection Evaluation")
+
+        # Only generate new indexes and return. Do not consider indexes from previous interations
+        if not self.reuse_prev_results:
+            new_index = self._run_algorithms()
+            self.save_indexes([new_index])
+            self.write_actions_sql_file(
+                new_index[3])
+            return
 
         # Try to load saved indexes pickle file
         indexes = self.load_most_recent_indexes()
@@ -122,32 +143,6 @@ class P1IndexSelection:
                 new_index[3])
             self.print_indexes(indexes + [new_index])
 
-        # i = 0
-        # for _, _, _, _, goodput in indexes:
-        #     print(goodput, grading_goodput)
-        #     if goodput != -1:
-        #         i += 1
-        #     else:
-        #         indexes[i] = list(indexes[i])
-        #         indexes[i][4] = grading_goodput
-        #         i += 1
-        #         break
-        # self.save_indexes(indexes)
-        # self.print_indexes(indexes)
-
-        # # All indexes have been benchmarked. Return index with most goodput
-        # if i == len(indexes):
-        #     print(indexes)
-        #     best_index = sorted(indexes, key=lambda x: x[4], reverse=True)[0]
-        #     self.write_actions_sql_file(best_index[3])
-        #     print("Writing actions.sql...")
-        #     self.print_indexes([best_index])
-        # else:
-        #     # Benchmark next index
-        #     self.write_actions_sql_file(indexes[i][3])
-        #     print("Writing actions.sql...")
-        #     self.print_indexes([indexes[i]])
-
     def _run_algorithms(self):
         with open(self.config_file) as f:
             config = json.load(f)
@@ -157,6 +152,9 @@ class P1IndexSelection:
         self.db_connector.enable_simulation()
         # Show current indexes
         self.db_connector.show_curr_indexes()
+        # Write actions to drop all indexes before dropping them
+        self.write_drop_actions_sql_file()
+        # Drop indexes
         self.db_connector.drop_indexes()
 
         # Set the random seed to obtain deterministic statistics (and cost estimations)
@@ -239,17 +237,13 @@ class P1IndexSelection:
             max_cost = 1
 
         best_index_all_algorithms = sorted(best_indexes_all_algorithms,
-                                           key=lambda x: x[2]/max_cost+x[1]/max_runtime)[0]  # TODO: change how many indexes to benchmark depending on time limits
+                                           key=lambda x: x[2]/max_cost+x[1]/max_runtime)  # TODO: change how many indexes to benchmark depending on time limits
 
         total_runtime = round(time.time() - total_runtime, 2)
         print(f"Index Selection Finished in {total_runtime} seconds")
+        self.print_indexes(best_index_all_algorithms)
 
-        return best_index_all_algorithms
-
-        # self.save_indexes([best_indexes_all_algorithms])
-        # self.print_indexes([best_indexes_all_algorithms])
-        # self.write_actions_sql_file(
-        #     best_indexes_all_algorithms[3])
+        return best_index_all_algorithms[0]
 
     @ staticmethod
     def print_indexes(best_indexes):
@@ -327,8 +321,7 @@ class P1IndexSelection:
 
         return indexes
 
-    def write_actions_sql_file(self, indexes: list) -> list:
-        print("Generating actions.sql...")
+    def write_drop_actions_sql_file(self):
         with open('./actions.sql', 'w') as file:
             # Drop all old indexes, excluding UNIQUE ones
             drop_indexes = self.db_connector.get_indexes_to_drop()
@@ -340,6 +333,9 @@ class P1IndexSelection:
                 file.write(drop_stmt)
                 file.write('\n')
 
+    def write_actions_sql_file(self, indexes: list) -> list:
+        print("Generating actions.sql...")
+        with open('./actions.sql', 'w') as file:
             # Write create index statements
             for i, index in enumerate(indexes):
                 table_name = index.table()
@@ -377,8 +373,6 @@ class P1IndexSelection:
             raise Exception("Too many parameter lists in config")
 
     def _run_algorithm(self, config):
-        # TODO: REMOVE DROP INDEX
-        # TODO: Print already existent indexes before dropping
         self.db_connector.drop_indexes()
         self.db_connector.commit()
         self.setup_db_connector()

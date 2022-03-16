@@ -8,7 +8,7 @@
             "parameters": {
                 "max_indexes": [4, 6, 8, 10, 12, 14],
                 "max_indexes_naive": 2,
-                "max_index_width": 2
+                "max_index_width": 3
             },
             "timeout": 300
         },
@@ -23,7 +23,7 @@
             "name": "extend",
             "parameters": {
                 "budget_MB": [3000, 5000, 10000, 15000],
-                "max_index_width": 2
+                "max_index_width": 3
             },
             "timeout": 120
         },
@@ -31,14 +31,14 @@
             "name": "relaxation",
             "parameters": {
                 "budget_MB": [3000, 5000, 10000, 15000],
-                "max_index_width": 2
+                "max_index_width": 3
             },
             "timeout": 120
         },
         {
             "name": "anytime",
             "parameters": {
-                "max_index_width": 2,
+                "max_index_width": 3,
                 "budget_MB":  [3000, 5000, 10000, 15000],
                 "max_runtime_minutes": 30
             },
@@ -47,7 +47,7 @@
         {
             "name": "db2advis",
             "parameters": {
-                "max_index_width": 2,
+                "max_index_width": 3,
                 "budget_MB":  [3000, 5000, 10000, 15000],
                 "try_variations_seconds": 5
             },
