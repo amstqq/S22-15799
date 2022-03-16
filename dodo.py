@@ -4,7 +4,7 @@ from selection.project1_index_selection import P1IndexSelection
 def project1_setup():
     return {
         "actions": [
-            'sh install.sh'
+            'install.sh'
         ]
     }
 
