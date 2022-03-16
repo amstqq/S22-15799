@@ -4,26 +4,20 @@ def task_project1_setup():
     return {
         "actions": [
             'sh install.sh'
-        ], 
+        ],
         "verbosity": 2,
     }
+
 
 def task_project1():
     """
     Generate actions.
     """
-
-    # TODO: Install HypoPg
-    # sudo apt-get install postgresql-14-hypopg
-    # CREATE EXTENSION hypopg;
-    # Install dexter
-
     def run_index_selector(workload_csv):
-        # from selection.project1_index_selection import P1IndexSelection
-        from selection.p1_index_selection_train import P1IndexSelection
+        from selection.project1_index_selection import P1IndexSelection
 
         print(f"dodo file receive file {workload_csv}...")
-        index_selection = P1IndexSelection(workload_csv, None,
+        index_selection = P1IndexSelection(workload_csv, data_collection=True, log_level=None,
                                            disable_output_files=True)
         index_selection.run()
 

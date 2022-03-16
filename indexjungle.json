@@ -2,6 +2,7 @@
     "database_system": "postgres",
     "benchmark_name": "indexjungle",
     "number_of_actual_runs": 0,
+    "number_of_total_configs": 15,
     "algorithms": [
         {
             "name": "drop",

@@ -2,12 +2,8 @@ import copy
 import json
 import logging
 import pickle
-import sys
 import time
 import os
-
-import pandas as pd
-from sql_metadata import Parser
 
 from .algorithms.anytime_algorithm import AnytimeAlgorithm
 from .algorithms.auto_admin_algorithm import AutoAdminAlgorithm
@@ -41,7 +37,7 @@ CONFIG_PATH = "./indexjungle.json"
 
 
 class P1IndexSelection:
-    def __init__(self, workload_csv_path, log_level=None, disable_output_files=True, reuse_prev_results=False):
+    def __init__(self, workload_csv_path, data_collection=False, log_level=None, disable_output_files=True):
         if "CRITICAL_LOG" == log_level:
             logging.getLogger().setLevel(logging.CRITICAL)
         if "ERROR_LOG" == log_level:
@@ -60,7 +56,7 @@ class P1IndexSelection:
         self.db_pass = DEFAULT_PASS
         self.workload_csv_path = workload_csv_path
         # Whether indexes generated from previous iterations are reused
-        self.reuse_prev_results = reuse_prev_results
+        self.data_collection = data_collection
 
         # TODO: Add other paths
         self.workload_name = "epinions"
@@ -78,6 +74,7 @@ class P1IndexSelection:
             self.workload_name = "timeseries"
             sample_size = 1000
             self.config_file = "./timeseries.json"
+        self.workload_name = "epinions"  # TODO: REMOVE
 
         self.setup_db_connector()
 
@@ -92,58 +89,50 @@ class P1IndexSelection:
             logging.getLogger().setLevel(logging.DEBUG)
         logging.info("Starting Index Selection Evaluation")
 
-        # Only generate new indexes and return. Do not consider indexes from previous interations
-        if not self.reuse_prev_results:
-            new_index = self._run_algorithms()
-            self.save_indexes([new_index])
-            self.write_actions_sql_file(
-                new_index[3])
-            return
-
         # Try to load saved indexes pickle file
         indexes = self.load_most_recent_indexes()
         if indexes == None:
             # Generate indexes if none found
-            new_index = self._run_algorithms()
+            new_index = self._run_algorithms(0)
             self.save_indexes([new_index])
             self.write_actions_sql_file(
                 new_index[3])
+            self.print_indexes([new_index])
             return
 
-        grading_goodput = self.load_most_recent_grading_result()
-        # goodput = None
-        if grading_goodput == None:
-            # Generate indexes if none found
-            new_index = self._run_algorithms()
-            self.save_indexes([new_index])
-            self.write_actions_sql_file(
-                new_index[3])
-            return
-
-        max_iterations = 5  # TODO: change based on timeout
+        # Only collect goodput if data_collection flag is True
+        grading_goodput = -1
+        if self.data_collection:
+            grading_goodput = self.load_most_recent_grading_result()
+            if grading_goodput == None:
+                # Generate indexes if none found
+                new_index = self._run_algorithms(0)
+                self.save_indexes([new_index])
+                self.write_actions_sql_file(
+                    new_index[3])
+                self.print_indexes([new_index])
+                return
 
         # Update goodput of latest index
-        if len(indexes) != max_iterations or indexes[-1] != -1:
+        if indexes[-1] != -1:
             indexes[-1] = list(indexes[-1])
             indexes[-1][4] = grading_goodput
 
-        # If benchmarked 5 times, then just return the best result so far
-        if len(indexes) == max_iterations:  # TODO: change based on timeout
-            self.save_indexes(indexes)
-            best_index = sorted(indexes, key=lambda x: x[4], reverse=True)[0]
-            self.write_actions_sql_file(best_index[3])
-            print("Writing actions.sql...")
-            self.print_indexes(indexes)
-        else:
-            # Benchmark next index
-            # Generate indexes if none found
-            new_index = self._run_algorithms()
-            self.save_indexes(indexes + [new_index])
-            self.write_actions_sql_file(
-                new_index[3])
-            self.print_indexes(indexes + [new_index])
+        # Benchmark next index
+        iteration = len(indexes)
+        new_index = self._run_algorithms(iteration)
 
-    def _run_algorithms(self):
+        # No more indexes to benchmark, None is returned
+        if new_index == None:
+            self.print_indexes(indexes)
+            return
+
+        self.save_indexes(indexes + [new_index])
+        self.write_actions_sql_file(
+            new_index[3])
+        self.print_indexes(indexes + [new_index])
+
+    def _run_algorithms(self, config_index):
         with open(self.config_file) as f:
             config = json.load(f)
         # Initialize postgres connector
@@ -162,101 +151,71 @@ class P1IndexSelection:
         self.db_connector.create_statistics()
         self.db_connector.commit()
 
-        print("Setup complete!\nStart running algorithms...")
-
-        total_runtime = time.time()
-
-        # Obtain best index from each algorithm
-        best_indexes_all_algorithms = []
+        # 'config_index' tells us which config and which parameter should be run next.
+        # First calculate the correponding algo based on config_index, then run that algo
+        # If all configs have been used, loop back to runthe first config again
         number_of_actual_runs = config[
             "number_of_actual_runs"] if "number_of_actual_runs" in config else 0
+        total_configs = config["number_of_total_configs"]
+        config_index = config_index % total_configs
+
+        algorithm_config = None
+        cumulative_config_index = 0
         for algorithm_config in config["algorithms"]:
-            algo_start_time = time.time()
             # There are multiple configs if there is a parameter list
             # configured (as a list in the .json file)
             algorithm_config["number_of_actual_runs"] = number_of_actual_runs
             configs = self._find_parameter_list(algorithm_config)
 
-            best_cost = float('inf')
-            best_runtime = float('inf')
-            best_indexes = None
-            for algorithm_config_unfolded in configs:
-                start_time = time.time()
-                # Generate new sample workload of sample_size=100
-                self.workload = self.workload_generator.generate_sample_workload()
-                cfg = algorithm_config_unfolded
-                indexes, what_if, cost_requests, cache_hits = self._run_algorithm(
-                    cfg)
+            if config_index < cumulative_config_index + len(configs):
+                algorithm_config = configs[config_index -
+                                           cumulative_config_index]
+                break  # Algorithm found
+            else:
+                cumulative_config_index += len(configs)
+        if algorithm_config == None:
+            return None
 
-                calculation_time = round(time.time() - start_time, 2)
-                benchmark = Benchmark(
-                    self.workload,
-                    indexes,
-                    self.db_connector,
-                    algorithm_config_unfolded,
-                    calculation_time,
-                    self.disable_output_files,
-                    config,
-                    cost_requests,
-                    cache_hits,
-                    what_if,
-                )
+        print(
+            f"Setup complete!\nStart running {algorithm_config['name']} with {algorithm_config['parameters']}...")
 
-                cost, runtime, hit = benchmark.benchmark()
+        algo_start_time = time.time()
+        # Generate new sample workload of sample_size=x
+        self.workload = self.workload_generator.generate_sample_workload()
+        cfg = algorithm_config
+        indexes, what_if, cost_requests, cache_hits = self._run_algorithm(
+            cfg)
 
-                # Update best_indexes
-                # If "number_of_actual_runs" > 0, then actual runtime is returned from benchmark
-                if "number_of_actual_runs" in cfg and cfg["number_of_actual_runs"] > 0:
-                    if runtime < best_runtime:
-                        best_indexes = indexes
-                        best_runtime = runtime
-                        best_cost = cost
-                        best_indexes = indexes
-                else:
-                    if cost < best_cost:
-                        best_indexes = indexes
-                        best_cost = cost
-                        best_runtime = 0
-                        best_indexes = indexes
-            best_indexes_all_algorithms.append(
-                [algorithm_config["name"], best_runtime, best_cost, best_indexes, -1])  # The last element is goodput which will be obtained from the grading script later
-            algo_time = round(time.time() - algo_start_time, 2)
-            print(
-                f"{algorithm_config['name']} finished in {algo_time} seconds...")
+        calculation_time = round(time.time() - algo_start_time, 2)
+        benchmark = Benchmark(
+            self.workload,
+            indexes,
+            self.db_connector,
+            cfg,
+            calculation_time,
+            self.disable_output_files,
+            config,
+            cost_requests,
+            cache_hits,
+            what_if,
+        )
 
-        # Store all indexes in sorted order, weight cost by sample runtime
-        # Weighted cost = scaled_cost + scaled_weight
-        # Runtime = 0 if self.number_of_actual_runs = 0, ie. no sample query is run
-        # Cost is computed by cost estimator. Runtime is obtained from running sample queries.
-        max_runtime = max([x[1] for x in best_indexes_all_algorithms]
-                          )
-        if max_runtime == 0:
-            max_runtime = 1
-        max_cost = max([x[2] for x in best_indexes_all_algorithms])
-        if max_cost == 0:
-            max_cost = 1
+        cost, _, _ = benchmark.benchmark()
 
-        best_index_all_algorithms = sorted(best_indexes_all_algorithms,
-                                           key=lambda x: x[2]/max_cost+x[1]/max_runtime)  # TODO: change how many indexes to benchmark depending on time limits
+        # The last element is goodput which will be obtained from the grading script later
+        best_indexes = [
+            algorithm_config["name"], cfg["parameters"], cost, indexes, -1]
+        algo_time = round(time.time() - algo_start_time, 2)
+        print(
+            f"{algorithm_config['name']} finished in {algo_time} seconds...")
 
-        total_runtime = round(time.time() - total_runtime, 2)
-        print(f"Index Selection Finished in {total_runtime} seconds")
-        self.print_indexes(best_index_all_algorithms)
+        return best_indexes
 
-        return best_index_all_algorithms[0]
-
-    @ staticmethod
+    @staticmethod
     def print_indexes(best_indexes):
-        max_runtime = max([x[1] for x in best_indexes]
-                          )
-        if max_runtime == 0:
-            max_runtime = 1
-        max_cost = max([x[2] for x in best_indexes])
-        if max_cost == 0:
-            max_cost = 1
-        for name, runtime, cost, indexes, goodput in best_indexes:
+        for name, parameters, cost, indexes, goodput in best_indexes:
             print(
-                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, runtime: {runtime:.4f}, weighted_cost: {cost/max_cost+runtime/max_runtime:.4f} ======= \nIndexes: {indexes}\n")
+                f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, params: {parameters}, Indexes: {indexes}\n")
 
     def save_indexes(self, indexes):
         save_dir = os.path.join(os.getcwd(), f"indexes_results/")
@@ -280,7 +239,6 @@ class P1IndexSelection:
             dir_name for dir_name in dir_names if 'baseline' not in dir_name],
             key=lambda x: int(x.rsplit('_', 1)[1]),
             reverse=True)
-        print(dir_names)
 
         if len(dir_names) == 0:
             return None
