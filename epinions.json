@@ -14,7 +14,7 @@
                     50000,
                     80000
                 ],
-                "max_indexes": [4, 6, 8, 10, 15],
+                "max_indexes": 10,
                 "max_index_width": 2
             },
             "timeout": 120
@@ -29,7 +29,7 @@
                     50000,
                     80000
                 ],
-                "max_indexes": [4, 6, 8, 10, 15],
+                "max_indexes": 10,
                 "max_index_width": 2
             },
             "timeout": 120
@@ -44,7 +44,7 @@
                     50000,
                     80000
                 ],
-                "max_indexes": [4, 6, 8, 10, 15],
+                "max_indexes": 10,
                 "max_index_width": 2
             },
             "timeout": 120
@@ -60,7 +60,7 @@
                     50000,
                     80000
                 ],
-                "max_indexes": [4, 6, 8, 10, 15],
+                "max_indexes": 10,
                 "try_variations_seconds": 5
             },
             "timeout": 120
@@ -68,11 +68,13 @@
         {
             "name": "auto_admin",
             "parameters": {
-                "max_indexes": [4, 6, 8],
-                "budget_MB": [
-                    5000,
-                    10000
+                "max_indexes": [
+                    4,
+                    6,
+                    10,
+                    15
                 ],
+                "budget_MB": 10000,
                 "max_runtime_minutes": 1.5,
                 "max_indexes_naive": 1,
                 "max_index_width": 2
