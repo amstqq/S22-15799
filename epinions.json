@@ -8,13 +8,8 @@
             "parameters": {
                 "max_indexes": [
                     4,
-                    6,
                     8,
-                    10,
-                    12,
-                    14,
-                    16,
-                    18
+                    12
                 ]
             },
             "timeout": 120
@@ -25,8 +20,8 @@
                 "max_indexes": [
                     6
                 ],
-                "max_indexes_naive": 2,
-                "max_index_width": 3
+                "max_indexes_naive": 1,
+                "max_index_width": 2
             },
             "timeout": 300
         },
@@ -36,10 +31,9 @@
                 "budget_MB": [
                     3000,
                     5000,
-                    10000,
-                    15000
+                    10000
                 ],
-                "max_index_width": 3
+                "max_index_width": 2
             },
             "timeout": 120
         },
@@ -52,20 +46,18 @@
                     10000,
                     15000
                 ],
-                "max_index_width": 3
+                "max_index_width": 2
             },
             "timeout": 120
         },
         {
             "name": "anytime",
             "parameters": {
-                "max_index_width": 3,
+                "max_index_width": 2,
                 "budget_MB": [
-                    3000,
-                    10000,
-                    15000
+                    7000
                 ],
-                "max_runtime_minutes": 0.5
+                "max_runtime_minutes": 0.25
             },
             "timeout": 120
         },
@@ -76,8 +68,7 @@
                 "budget_MB": [
                     3000,
                     5000,
-                    10000,
-                    15000
+                    10000
                 ],
                 "try_variations_seconds": 5
             },
