@@ -479,11 +479,11 @@ class WorkloadGenerator:
         # Extract database schema
         tables_and_columns = db_connector.table_and_column_names()
         for table_name, column_name in tables_and_columns:
+            print(table_name, column_name)
             if table_name not in self._db_schema:
-                self._db_schema[table_name] = set(column_name)
+                self._db_schema[table_name] = set([column_name])
             else:
                 self._db_schema[table_name].add(column_name)
-        print(tables_and_columns)
         self._build_table_object()
 
         print(f"Preprocessing CSV logs in: {workload_csv_path}")
