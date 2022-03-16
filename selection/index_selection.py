@@ -36,7 +36,7 @@ DEFAULT_PASS = "project1pass"
 CONFIG_PATH = "./indexjungle.json"
 
 
-class P1IndexSelection:
+class IndexSelection:
     def __init__(self, workload_csv_path, data_collection=False, log_level=None, disable_output_files=True):
         if "CRITICAL_LOG" == log_level:
             logging.getLogger().setLevel(logging.CRITICAL)
@@ -64,17 +64,18 @@ class P1IndexSelection:
         self.config_file = CONFIG_PATH
         if "epinions" in workload_csv_path:
             self.workload_name = "epinions"
-            sample_size = 1000
+            sample_size = 1000 if not data_collection else 10000
             self.config_file = "./epinions.json"
         elif "indexjungle" in workload_csv_path:
             self.workload_name = "indexjungle"
-            sample_size = 1000
+            sample_size = 1000 if not data_collection else 10000
             self.config_file = "./indexjungle.json"
         elif "timeseries" in workload_csv_path:
             self.workload_name = "timeseries"
-            sample_size = 1000
+            sample_size = 1000 if not data_collection else 10000
             self.config_file = "./timeseries.json"
         self.workload_name = "epinions"  # TODO: REMOVE
+        sample_size = 1000
 
         self.setup_db_connector()
 
@@ -204,7 +205,7 @@ class P1IndexSelection:
 
         # The last element is goodput which will be obtained from the grading script later
         best_indexes = [
-            algorithm_config["name"], cfg["parameters"], cost, indexes, -1]
+            algorithm_config["name"], cfg["parameters"], cost, indexes, calculation_time, -1]
         algo_time = round(time.time() - algo_start_time, 2)
         print(
             f"{algorithm_config['name']} finished in {algo_time} seconds...")
@@ -213,7 +214,7 @@ class P1IndexSelection:
 
     @staticmethod
     def print_indexes(best_indexes):
-        for name, parameters, cost, indexes, goodput in best_indexes:
+        for name, parameters, cost, indexes, _, goodput in best_indexes:
             print(
                 f"====== {name}, goodput:{goodput:.4f}, cost: {cost:.4f}, params: {parameters}, Indexes: {indexes}\n")
 

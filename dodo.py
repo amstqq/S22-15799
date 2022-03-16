@@ -14,11 +14,11 @@ def task_project1():
     Generate actions.
     """
     def run_index_selector(workload_csv):
-        from selection.project1_index_selection import P1IndexSelection
+        from selection.index_selection import IndexSelection
 
         print(f"dodo file receive file {workload_csv}...")
-        index_selection = P1IndexSelection(workload_csv, data_collection=True, log_level=None,
-                                           disable_output_files=True)
+        index_selection = IndexSelection(workload_csv, data_collection=True, log_level=None,
+                                         disable_output_files=True)
         index_selection.run()
 
     return {
