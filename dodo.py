@@ -17,7 +17,7 @@ def task_project1():
         from selection.index_selection import IndexSelection
 
         print(f"dodo file receive file {workload_csv}...")
-        index_selection = IndexSelection(workload_csv, data_collection=True, log_level=None,
+        index_selection = IndexSelection(workload_csv, data_collection=False, log_level=None,
                                          disable_output_files=True)
         index_selection.run()
 

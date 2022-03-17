@@ -28,7 +28,7 @@ The results are limited since only a subset (about 1000-10000 queries from 200,0
 
 - Higher storage budget actually leads to worse performance. Therefore a lower memory budget is used for the rest of the evaluation.
 
-![index jungle max_index](./graphs/indexjungle_goodput_vs_maxindex.png)
+![indexjungle max_index](./graphs/indexjungle_goodput_vs_maxindex.png)
 
 - db2advis finds a significantly better solution at lower max_index cap
 
@@ -38,6 +38,6 @@ The results are limited since only a subset (about 1000-10000 queries from 200,0
 
 - Similar to indexjungle, higher storage budget leads to worse performance.
 
-![index jungle max_index](./graphs/indexjungle_goodput_vs_maxindex.png)
+![timeseries max_index](./graphs/timeseries_goodput_vs_maxindex.png)
 
-- db2advis finds a significantly better solution at lower max_index cap
+- Relaxation finds significant better solutions at large index cap. Db2advis also performs relative well.
