@@ -1,7 +1,7 @@
 {
     "database_system": "postgres",
     "benchmark_name": "indexjungle",
-    "number_of_total_configs": 24,
+    "number_of_total_configs": 19,
     "number_of_actual_runs": 0,
     "algorithms": [
         {
