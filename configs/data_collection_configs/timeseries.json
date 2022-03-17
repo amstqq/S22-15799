@@ -1,14 +1,14 @@
 {
   "database_system": "postgres",
-  "benchmark_name": "indexjungle",
-  "number_of_total_configs": 24,
+  "benchmark_name": "timeseries",
+  "number_of_total_configs": 29,
   "number_of_actual_runs": 0,
   "algorithms": [
       {
           "name": "extend",
           "parameters": {
-              "budget_MB": [3000, 7000, 10000, 20000, 50000],
-              "max_indexes": 8,
+              "budget_MB": [3000, 7000, 10000, 30000, 50000],
+              "max_indexes": 10,
               "max_index_width": 2
           },
           "timeout": 120
@@ -16,7 +16,7 @@
       {
           "name": "drop",
           "parameters": {
-              "budget_MB": 20000,
+              "budget_MB": 5000,
               "max_index_width": 2,
               "max_indexes": [
                   4,
@@ -31,7 +31,7 @@
       {
           "name": "extend",
           "parameters": {
-              "budget_MB": 20000,
+              "budget_MB": 5000,
               "max_indexes": [
                   4,
                   6,
@@ -46,7 +46,7 @@
       {
           "name": "relaxation",
           "parameters": {
-              "budget_MB": 20000,
+              "budget_MB": 5000,
               "max_indexes": [
                   4,
                   6,
@@ -62,7 +62,7 @@
           "name": "db2advis",
           "parameters": {
               "max_index_width": 2,
-              "budget_MB": 20000,
+              "budget_MB": 5000,
               "max_indexes": [
                   4,
                   6,
@@ -83,7 +83,7 @@
                   10,
                   15
               ],
-              "budget_MB": 20000,
+              "budget_MB": 5000,
               "max_runtime_minutes": 1.5,
               "max_indexes_naive": 1,
               "max_index_width": 2

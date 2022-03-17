@@ -7,7 +7,7 @@
         {
             "name": "drop",
             "parameters": {
-                "budget_MB": 4000,
+                "budget_MB": 3000,
                 "max_index_width": 2,
                 "max_indexes": [
                     6,
@@ -21,7 +21,7 @@
         {
             "name": "extend",
             "parameters": {
-                "budget_MB": 4000,
+                "budget_MB": 3000,
                 "max_indexes": [
                     6,
                     8,
@@ -35,7 +35,7 @@
         {
             "name": "relaxation",
             "parameters": {
-                "budget_MB": 4000,
+                "budget_MB": 3000,
                 "max_indexes": [
                     6,
                     8,
@@ -50,7 +50,7 @@
             "name": "db2advis",
             "parameters": {
                 "max_index_width": 2,
-                "budget_MB": 4000,
+                "budget_MB": 3000,
                 "max_indexes": [
                     6,
                     8,
@@ -69,7 +69,7 @@
                     10,
                     15
                 ],
-                "budget_MB": 4000,
+                "budget_MB": 3000,
                 "max_runtime_minutes": 1.5,
                 "max_indexes_naive": 1,
                 "max_index_width": 2
