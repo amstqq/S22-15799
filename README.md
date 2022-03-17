@@ -12,6 +12,8 @@ This project adapts from the github repo of paper [_Magic mirror in my hand, whi
 
 ## Visualizations and Findings
 
+The results are limited since only a subset (about 1000-10000 queries from 200,000) are used to find indexes due to time constraint (~3 min). Longer time limit allows for more exploration and could lead to siginificantly better results.
+
 ### Epinions
 
 ![epinions](./graphs/epinions_goodput_vs_maxindex.png)

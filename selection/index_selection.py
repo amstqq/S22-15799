@@ -59,20 +59,20 @@ class IndexSelection:
 
         # TODO: Add other paths
         self.workload_name = "epinions"
-        sample_size = 1000
+        sample_size = 2000
         config_file = "./configs/grade_configs/" if not data_collection else "./configs/data_collection_configs/"
 
         if "epinions" in workload_csv_path:
             self.workload_name = "epinions"
-            sample_size = 1000 if not data_collection else 10000
+            sample_size = 2000 if not data_collection else 10000
             self.config_file = config_file + "epinions.json"
         elif "indexjungle" in workload_csv_path:
             self.workload_name = "indexjungle"
-            sample_size = 1000 if not data_collection else 10000
+            sample_size = 2000 if not data_collection else 10000
             self.config_file = config_file + "indexjungle.json"
         else:
             self.workload_name = "timeseries"
-            sample_size = 1000 if not data_collection else 10000
+            sample_size = 2000 if not data_collection else 10000
             self.config_file = config_file + "timeseries.json"
 
         self.setup_db_connector()
