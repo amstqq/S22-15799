@@ -10,7 +10,7 @@
                 "max_index_width": 2,
                 "budget_MB": 3000,
                 "max_indexes": [
-                    3,4
+                    3,4,5
                 ],
                 "try_variations_seconds": 5
             },
@@ -22,7 +22,7 @@
                 "budget_MB": 3000,
                 "max_index_width": 2,
                 "max_indexes": [
-                    3,4
+                    3,4,5
                 ]
             },
             "timeout": 120
@@ -32,7 +32,7 @@
             "parameters": {
                 "budget_MB": 3000,
                 "max_indexes": [
-                    3,4
+                    3,4,5
                 ],
                 "max_index_width": 2
             },
@@ -43,7 +43,7 @@
             "parameters": {
                 "budget_MB": 3000,
                 "max_indexes": [
-                    2,4
+                    3,4,5
                 ],
                 "max_index_width": 2
             },
@@ -53,7 +53,7 @@
             "name": "auto_admin",
             "parameters": {
                 "max_indexes": [
-                    3,4
+                    3,4,5
                 ],
                 "budget_MB": 3000,
                 "max_runtime_minutes": 1.5,
