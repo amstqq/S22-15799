@@ -1,0 +1,70 @@
+{
+  "database_system": "postgres",
+  "benchmark_name": "epinions",
+  "number_of_total_configs": 6,
+  "number_of_actual_runs": 0,
+  "algorithms": [
+      {
+        "name": "extend",
+        "parameters": {
+            "budget_MB": 10000,
+            "max_indexes": [
+                8
+            ],
+            "max_index_width": 2
+        },
+        "timeout": 120
+      },
+      {
+        "name": "auto_admin",
+        "parameters": {
+            "max_indexes": [
+                9
+            ],
+            "budget_MB": 10000,
+            "max_runtime_minutes": 1,
+            "max_indexes_naive": 1,
+            "max_index_width": 2
+        },
+        "timeout": 300
+      },
+      {
+        "name": "db2advis",
+        "parameters": {
+            "max_index_width": 2,
+            "budget_MB": 10000,
+            "max_indexes": [
+                8
+            ],
+            "try_variations_seconds": 5
+        },
+        "timeout": 120
+      },
+      {
+          "name": "relaxation",
+          "parameters": {
+              "budget_MB": 10000,
+              "max_indexes": [
+                  6,
+                  10
+              ],
+              "max_index_width": 2
+          },
+          "timeout": 120
+      },
+      {
+        "name": "drop",
+        "parameters": {
+            "budget_MB": 10000,
+            "max_index_width": 2,
+            "max_indexes": [
+                6
+            ]
+        },
+        "timeout": 120
+      }
+   
+      
+      
+  ]
+}
