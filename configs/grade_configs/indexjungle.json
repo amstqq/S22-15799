@@ -8,9 +8,9 @@
             "name": "db2advis",
             "parameters": {
                 "max_index_width": 2,
-                "budget_MB": 3000,
+                "budget_MB": 5000,
                 "max_indexes": [
-                    4, 5
+                    4, 5, 15
                 ],
                 "try_variations_seconds": 5
             },
@@ -19,9 +19,31 @@
         {
             "name": "extend",
             "parameters": {
-                "budget_MB": 3000,
+                "budget_MB": 5000,
                 "max_indexes": [
-                    8
+                    4, 7
+                ],
+                "max_index_width": 2
+            },
+            "timeout": 120
+        },
+        {
+            "name": "relaxation",
+            "parameters": {
+                "budget_MB": 5000,
+                "max_indexes": [
+                    4, 7
+                ],
+                "max_index_width": 2
+            },
+            "timeout": 120
+        },
+        {
+            "name": "drop",
+            "parameters": {
+                "budget_MB": 5000,
+                "max_indexes": [
+                    14, 20
                 ],
                 "max_index_width": 2
             },
