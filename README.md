@@ -19,3 +19,9 @@ This project adapts from the github repo of paper [_Magic mirror in my hand, whi
 - The best index size appears to be around 8.
 - More storage budget limit does not usually lead to better index
 - Greater-sized indexes are more complex and can potentially lead to degration in performance.
+
+### Index Jungle
+
+![epinions](./graphs/indexjungle_goodput_vs_budget.png)
+
+- Higher storage budget actually leads to worse performance. Therefore a lower memory budget is used for the rest of the evaluation.
