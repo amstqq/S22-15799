@@ -1,7 +1,7 @@
 {
     "database_system": "postgres",
     "benchmark_name": "indexjungle",
-    "number_of_total_configs": 10,
+    "number_of_total_configs": 19,
     "number_of_actual_runs": 0,
     "algorithms": [
         {
@@ -10,8 +10,10 @@
                 "budget_MB": 3000,
                 "max_index_width": 2,
                 "max_indexes": [
-                    2,
-                    4
+                    6,
+                    8,
+                    10,
+                    15
                 ]
             },
             "timeout": 120
@@ -21,7 +23,10 @@
             "parameters": {
                 "budget_MB": 3000,
                 "max_indexes": [
-                    2,4
+                    6,
+                    8,
+                    10,
+                    15
                 ],
                 "max_index_width": 2
             },
@@ -32,7 +37,10 @@
             "parameters": {
                 "budget_MB": 3000,
                 "max_indexes": [
-                    2,4
+                    6,
+                    8,
+                    10,
+                    15
                 ],
                 "max_index_width": 2
             },
@@ -44,7 +52,10 @@
                 "max_index_width": 2,
                 "budget_MB": 3000,
                 "max_indexes": [
-                    2,4
+                    6,
+                    8,
+                    10,
+                    15
                 ],
                 "try_variations_seconds": 5
             },
@@ -54,7 +65,9 @@
             "name": "auto_admin",
             "parameters": {
                 "max_indexes": [
-                    2,4
+                    7,
+                    10,
+                    15
                 ],
                 "budget_MB": 3000,
                 "max_runtime_minutes": 1.5,
