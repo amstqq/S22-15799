@@ -5,20 +5,6 @@
     "number_of_actual_runs": 0,
     "algorithms": [
           {
-              "name": "db2advis",
-              "parameters": {
-                  "max_index_width": 2,
-                  "budget_MB": 5000,
-                  "max_indexes": [
-                      4,
-                      8,
-                      15
-                  ],
-                  "try_variations_seconds": 5
-              },
-              "timeout": 120
-          },
-          {
               "name": "relaxation",
               "parameters": {
                   "budget_MB": 5000,
@@ -26,6 +12,18 @@
                       15, 20
                   ],
                   "max_index_width": 2
+              },
+              "timeout": 120
+          },
+          {
+              "name": "db2advis",
+              "parameters": {
+                  "max_index_width": 2,
+                  "budget_MB": 5000,
+                  "max_indexes": [
+                      15,4
+                  ],
+                  "try_variations_seconds": 5
               },
               "timeout": 120
           }
