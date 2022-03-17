@@ -22,6 +22,20 @@ This project adapts from the github repo of paper [_Magic mirror in my hand, whi
 
 ### Index Jungle
 
-![epinions](./graphs/indexjungle_goodput_vs_budget.png)
+![indexjugle budget](./graphs/indexjungle_goodput_vs_budget.png)
 
 - Higher storage budget actually leads to worse performance. Therefore a lower memory budget is used for the rest of the evaluation.
+
+![index jungle max_index](./graphs/indexjungle_goodput_vs_maxindex.png)
+
+- db2advis finds a significantly better solution at lower max_index cap
+
+### Timeseries
+
+![timeseries budget](./graphs/timeseries_goodput_vs_budget.png)
+
+- Similar to indexjungle, higher storage budget leads to worse performance.
+
+![index jungle max_index](./graphs/indexjungle_goodput_vs_maxindex.png)
+
+- db2advis finds a significantly better solution at lower max_index cap

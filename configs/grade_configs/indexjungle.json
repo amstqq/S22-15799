@@ -1,0 +1,31 @@
+{
+    "database_system": "postgres",
+    "benchmark_name": "indexjungle",
+    "number_of_total_configs": 10,
+    "number_of_actual_runs": 0,
+    "algorithms": [
+        {
+            "name": "db2advis",
+            "parameters": {
+                "max_index_width": 2,
+                "budget_MB": 3000,
+                "max_indexes": [
+                    4, 5
+                ],
+                "try_variations_seconds": 5
+            },
+            "timeout": 120
+        },
+        {
+            "name": "extend",
+            "parameters": {
+                "budget_MB": 3000,
+                "max_indexes": [
+                    8
+                ],
+                "max_index_width": 2
+            },
+            "timeout": 120
+        }
+    ]
+}
